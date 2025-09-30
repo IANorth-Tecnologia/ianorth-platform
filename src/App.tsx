@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { AnalysisPanel } from './components/AnalysisPanel';
-import { VideoFeed } from './components/videoFeed';
+import { VideoFeed } from './components/VideoFeed';
 
 export const App: React.FC = () => {
   return (
