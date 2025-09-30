@@ -42,7 +42,7 @@ Siga os passos abaixo para configurar e executar o ambiente de desenvolvimento l
 **1. Clone o repositório:**
 ```bash
 git clone git@github.com:SEU_USUARIO/cv-interface.git
-cd cv-interface
+cd IaNorth-web
 ```
 
 **2. Instale as dependências do projeto:**
