@@ -1,73 +1,108 @@
-# React + TypeScript + Vite
+# IA North - Dashboard de Análise de Visão Computacional
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![IA North](public/icon.png)
 
-Currently, two official plugins are available:
+Dashboard em tempo real para visualização de dados gerados por modelos de Inteligência Artificial da IANorth. A primeira aplicação deste dashboard é o monitoramento da contagem de vergalhões em lotes de produção.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![Screenshot da Aplicação](public/IA-Verg-1.gif)
+*(Nota: Este GIF é um placeholder da visualização final do produto.)*
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## ✨ Funcionalidades
 
-## Expanding the ESLint configuration
+- **Visualização em Tempo Real**: Interface reativa que exibe dados atualizados da contagem (atualmente simulados).
+- **Layout Profissional**: Design de duas colunas com feed de vídeo e painel de análise de dados.
+- **Painel de Análise**: Exibe a contagem atual, a meta do lote, o status da operação e o progresso percentual.
+- **Design System Padronizado**: Cores e estilos definidos como *tokens* no Tailwind CSS para garantir consistência visual e fácil manutenção.
+- **Componentização**: Interface construída com componentes React reutilizáveis e bem definidos.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🛠️ Tecnologias Utilizadas
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Este projeto foi construído utilizando as seguintes tecnologias:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- **[React](https://reactjs.org/)**: Biblioteca para construção da interface de usuário.
+- **[TypeScript](https://www.typescriptlang.org/)**: Superset do JavaScript que adiciona tipagem estática.
+- **[Vite](https://vitejs.dev/)**: Ferramenta de build moderna e extremamente rápida.
+- **[Tailwind CSS](https://tailwindcss.com/)**: Framework CSS utility-first para estilização.
+- **[React Icons](https://react-icons.github.io/react-icons/)**: Biblioteca para inclusão de ícones SVG.
+
+---
+
+## 🚀 Como Executar o Projeto
+
+Siga os passos abaixo para configurar e executar o ambiente de desenvolvimento local.
+
+**Pré-requisitos:**
+- [Node.js](https.nodejs.org/en/) (versão 18.x ou superior)
+- [npm](https://www.npmjs.com/) ou [Yarn](https://yarnpkg.com/)
+
+**1. Clone o repositório:**
+```bash
+git clone git@github.com:SEU_USUARIO/cv-interface.git
+cd cv-interface
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+**2. Instale as dependências do projeto:**
+```bash
+npm install
 ```
+
+**3. Execute o servidor de desenvolvimento:**
+```bash
+npm run dev
+```
+
+Após executar o comando, a aplicação estará disponível em `http://localhost:5173` (ou na porta indicada no seu terminal).
+
+---
+
+## 📂 Estrutura de Pastas
+
+O projeto segue uma estrutura de pastas simples e organizada para facilitar a navegação e manutenção do código:
+
+```
+cv-interface/
+├── public/              # Arquivos estáticos (imagens, fontes, etc.)
+├── src/
+│   ├── components/      # Componentes React reutilizáveis
+│   │   ├── AnalysisPanel.tsx
+│   │   └── VideoFeed.tsx
+│   ├── App.tsx          # Componente principal da aplicação
+│   ├── index.css        # Estilos globais e diretivas do Tailwind
+│   └── main.tsx         # Ponto de entrada da aplicação
+├── .gitignore           # Arquivos e pastas ignorados pelo Git
+├── package.json         # Dependências e scripts do projeto
+├── tailwind.config.js   # Arquivo de configuração do Tailwind CSS
+└── README.md            # Este arquivo
+```
+
+---
+
+## 🎨 Sistema de Design (Design System)
+
+Para manter a consistência visual, utilizamos um sistema de tokens de design definidos no arquivo `tailwind.config.js`. Todas as cores da aplicação são padronizadas com nomes semânticos.
+
+**Exemplo de uso:**
+- Em vez de `bg-gray-900`, use `bg-background-primary`.
+- Em vez de `text-blue-400`, use `text-accent-primary`.
+
+Consulte o objeto `theme.extend.colors` no arquivo `tailwind.config.js` para ver todos os tokens de cores disponíveis.
+
+---
+
+## 🔜 Próximos Passos
+
+- [ ] Conectar a interface com a API do backend para consumir dados reais.
+- [ ] Substituir o placeholder do vídeo por um stream de vídeo ao vivo (via MJPEG, HLS ou WebRTC).
+- [ ] Implementar WebSockets ou Server-Sent Events (SSE) para atualizações de dados em tempo real sem a necessidade de polling.
+- [ ] Criar componentes de visualização de dados mais complexos (gráficos de histórico, logs de eventos).
+- [ ] Adicionar testes unitários e de integração.
+
+---
+
+## 📄 Licença
+
+Este projeto é de propriedade da IANorth Tecnologia. Todos os direitos reservados.
