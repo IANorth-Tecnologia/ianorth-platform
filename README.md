@@ -64,7 +64,7 @@ Após executar o comando, a aplicação estará disponível em `http://localhost
 O projeto segue uma estrutura de pastas simples e organizada para facilitar a navegação e manutenção do código:
 
 ```
-cv-interface/
+IaNorth-web/
 ├── public/              # Arquivos estáticos (imagens, fontes, etc.)
 ├── src/
 │   ├── components/      # Componentes React reutilizáveis
