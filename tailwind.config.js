@@ -26,7 +26,7 @@ export default {
 
         // Accent colors (trabalham bem em ambos os temas)
         'accent-primary': '#3B82F6',   // Azul vibrante
-        'accent-secondary': '#60A5FA', // Um azul mais claro para hover/foco
+        'accent-secondary': '#3B82F6', // Mesmo azul do primary para melhor visibilidade
         
         // Status colors (trabalham bem em ambos os temas)
         'status-success': '#10B981',   // Verde
