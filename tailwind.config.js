@@ -8,21 +8,27 @@ export default {
   theme: {
     extend: {
 			colors: {
-        // Tons de fundo (background)
+        // Dark theme colors (your existing ones)
         'background-primary': '#111827', // Um cinza-azulado bem escuro
         'background-secondary': '#1F2937', // Um card, um pouco mais claro
         'background-tertiary': '#374151', // Para bordas ou elementos hover
-
-        // Cores de texto
         'text-primary': '#F9FAFB',     // Branco, para texto principal
         'text-secondary': '#9CA3AF',   // Cinza-claro, para subtextos
         'text-tertiary': '#6B7280',    // Cinza-médio, para texto desabilitado
 
-        // Cor de acento (principal da marca)
+        // Light theme colors (complementary)
+        'light-background-primary': '#FFFFFF',   // Branco puro
+        'light-background-secondary': '#F9FAFB', // Cinza muito claro
+        'light-background-tertiary': '#F3F4F6',  // Cinza claro para bordas
+        'light-text-primary': '#111827',         // Texto escuro principal
+        'light-text-secondary': '#6B7280',       // Texto escuro secundário
+        'light-text-tertiary': '#9CA3AF',        // Texto escuro terciário
+
+        // Accent colors (trabalham bem em ambos os temas)
         'accent-primary': '#3B82F6',   // Azul vibrante
         'accent-secondary': '#60A5FA', // Um azul mais claro para hover/foco
         
-        // Cores de Status
+        // Status colors (trabalham bem em ambos os temas)
         'status-success': '#10B981',   // Verde
         'status-warning': '#F59E0B',   // Amarelo/Laranja
         'status-danger': '#EF4444',    // Vermelho

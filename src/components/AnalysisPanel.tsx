@@ -10,13 +10,13 @@ interface AnalysisData {
 }
 
 const InfoCard: React.FC<{ icon: React.ReactNode; label: string; value: string; className?: string }> = ({ icon, label, value, className = '' }) => (
-  <div className={`bg-background-secondary p-4 rounded-lg flex items-center ${className}`}>
+  <div className={`bg-white dark:bg-background-secondary p-4 rounded-lg flex items-center border border-gray-200 dark:border-background-tertiary ${className}`}>
     <div className="mr-4 text-accent-primary">
       {icon}
     </div>
     <div>
-      <p className="text-sm text-text-secondary">{label}</p>
-      <p className="text-lg font-semibold text-text-primary">{value}</p>
+      <p className="text-sm text-gray-600 dark:text-text-secondary">{label}</p>
+      <p className="text-lg font-semibold text-gray-900 dark:text-text-primary">{value}</p>
     </div>
   </div>
 );
@@ -67,10 +67,10 @@ export const AnalysisPanel: React.FC = () => {
   const progressBarColor = data.status === 'concluido' ? 'bg-green-500' : 'bg-blue-500';
 
   return (
-    <div className="bg-background-secondary/70 backdrop-blur-sm border border-r-background-tertiary rounded-xl shadow-lg p-6 h-full text-text-primary">
+    <div className="bg-white/70 dark:bg-background-secondary/70 backdrop-blur-sm border border-gray-200 dark:border-background-tertiary rounded-xl shadow-lg p-6 h-full text-gray-900 dark:text-text-primary">
       <div className="flex items-center mb-6">
         <FiBarChart2 className="text-accent-primary mr-3" size={22} />
-        <h2 className="text-lg font-bold">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-text-primary">
           Análise da Contagem
         </h2>
       </div>
@@ -90,12 +90,12 @@ export const AnalysisPanel: React.FC = () => {
           />
         </div>
 
-        <div className="text-center bg-background-primary p-6 rounded-lg border border-background-tertiary">
-          <p className="text-text-secondary text-sm uppercase tracking-wider">Contagem Atual</p>
+        <div className="text-center bg-gray-50 dark:bg-background-primary p-6 rounded-lg border border-gray-200 dark:border-background-tertiary">
+          <p className="text-gray-600 dark:text-text-secondary text-sm uppercase tracking-wider">Contagem Atual</p>
           <p className="text-6xl font-bold my-2 text-accent-secondary">
             {data.currentCount}
           </p>
-          <p className="text-text-tertiary">de {data.targetCount} peças</p>
+          <p className="text-gray-500 dark:text-text-tertiary">de {data.targetCount} peças</p>
         </div>
 
         <div>
@@ -103,7 +103,7 @@ export const AnalysisPanel: React.FC = () => {
             <p className="text-sm text-accent-secondary">Progresso</p>
             <p className="text-lg font-semibold text-accent-secondary">{percentage}%</p>
           </div>
-          <div className="w-full bg-background-primary rounded-full h-2.5">
+          <div className="w-full bg-gray-200 dark:bg-background-primary rounded-full h-2.5">
             <div 
               className={`${progressBarColor} h-2.5 rounded-full transition-all duration-500 ease-out`} 
               style={{ width: `${percentage}%` }}
