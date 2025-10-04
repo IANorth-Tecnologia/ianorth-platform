@@ -8,9 +8,9 @@ export default {
   theme: {
     extend: {
 			colors: {
-        'background-primary': '#111827', // Um cinza-azulado bem escuro
-        'background-secondary': '#1F2937', // Um card, um pouco mais claro
-        'background-tertiary': '#374151', // Para bordas ou elementos hover
+        'background-primary': '#111827', 
+        'background-secondary': '#1F2937', 
+        'background-tertiary': '#374151', 
         'text-primary': '#F9FAFB',     // Branco, para texto principal
         'text-secondary': '#9CA3AF',   // Cinza-claro, para subtextos
         'text-tertiary': '#6B7280',    // Cinza-médio, para texto desabilitado
