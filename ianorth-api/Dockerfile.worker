@@ -1,0 +1,11 @@
+FROM ultralytics/ultralytics:latest
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY ./workers /app/workers
+COPY ./ver70.pt /app/ver70.pt
+
+CMD ["python", "-u", "workers/inference_worker.py"]

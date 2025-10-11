@@ -1,0 +1,82 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+*.sqlite3
+*.db
+*.pkl
+*.h5
+*.pt
+*.pth
+*.tmp
+*.bak
+
+
+# Redis (ignorar dumps e configs locais)
+dump.rdb
+*.aof
+*.conf
+
+# Ultralytics (modelos e cache)
+runs/
+weights/
+*.pt
+*.yaml
+*.onnx
+*.tflite
+*.mlmodel
+*.txt
+
+# Docker
+*.env
+.env.*
+docker-compose.override.yml
+*.local.yml
+*.secret.yml
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store
+
+# Sistema operacional
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDEs
+.idea/
+*.iml
+
+# Testes
+htmlcov/
+.tox/
+.coverage
+.cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Arquivos temporários
+*.swp
+*.swo
+*.~ 
+*~
+
+# Arquivos de configuração pessoal
+*.pem
+*.key
+*.crt
+*.cfg
+*.ini
+
