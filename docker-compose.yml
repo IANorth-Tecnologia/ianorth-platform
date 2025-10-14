@@ -1,45 +1,49 @@
 services:
-  # Serviço da Fila de Mensagens
   redis:
     image: redis:alpine
     container_name: ianorth_redis
     restart: unless-stopped
 
-  # Serviço do Banco de Dados
   db:
     image: postgres:13
     container_name: ianorth_db
-    # As variáveis de ambiente vêm do nosso arquivo .env
     env_file:
       - ./ianorth-api/.env
     volumes:
-      # Este volume garante que os dados do banco não sejam perdidos
       - postgres_data:/var/lib/postgresql/data/
     ports:
-      # Expõe a porta do Postgres para podermos nos conectar com uma ferramenta de BD, se necessário
       - "5432:5432"
     restart: unless-stopped
 
-  # Serviço do Gateway da API (que conversa com o frontend)
   gateway:
     build:
-      context: ./ianorth-api  # Onde encontrar o Dockerfile
+      context: ./ianorth-api
       dockerfile: Dockerfile.gateway
     container_name: ianorth_gateway
     env_file:
       - ./ianorth-api/.env
     ports:
-      - "8898:8898" # Expõe a porta da nossa API
+      - "8898:8898"
     depends_on:
       - db
-      - redis # Garante que o Gateway só inicie depois que o DB e o Redis estiverem prontos
+      - redis
     restart: unless-stopped
 
-    # Worker para a Câmera do Pátio 1
+  worker_dev:
+    build:
+      context: ./ianorth-api
+      dockerfile: Dockerfile.worker.dev
+    container_name: worker_dev_m1
+    env_file:
+      - ./ianorth-api/.env
+    depends_on:
+      - redis
+    restart: unless-stopped
+
   worker_cam_patio_1:
     build:
-      context: ./ianorth-api # CONTEXTO: Também aponta para a pasta do backend
-      dockerfile: Dockerfile.worker # DOCKERFILE: Usa o Dockerfile específico do worker
+      context: ./ianorth-api
+      dockerfile: Dockerfile.worker
     container_name: worker_cam_patio_1
     env_file:
       - ./ianorth-api/.env
@@ -56,3 +60,4 @@ services:
 
 volumes:
   postgres_data:
+

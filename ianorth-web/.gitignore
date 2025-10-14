@@ -1,6 +1,10 @@
 # Logs
 logs
 *.log
+.vite/
+.npm/
+.yarn/
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -8,7 +12,9 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
+dist/
+build/
+.next/
 dist-ssr
 *.local
 
@@ -28,6 +34,9 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 .DS_Store
 Thumbs.db:wa
