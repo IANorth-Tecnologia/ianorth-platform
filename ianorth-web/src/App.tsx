@@ -3,8 +3,12 @@ import React from 'react';
 import { ThemeProvider, ThemeToggle } from './components/ThemeProvider';
 import { AnalysisPanel } from './components/AnalysisPanel';
 import { VideoFeed } from './components/VideoFeed';
+import { CameraSelector } from './components/CameraSelector';
+import { useState } from 'react';
 
 export const App: React.FC = () => {
+  const [selectedCameraId, setSelectedCameraId] = useState<string | undefined>(undefined);
+
   return (
     <ThemeProvider>
       <div className="bg-gray-50 dark:bg-background-primary dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] min-h-screen text-gray-900 dark:text-text-primary p-4 sm:p-6 lg:p-8 font-sans transition-colors duration-300">
@@ -25,7 +29,8 @@ export const App: React.FC = () => {
         </header>
 
       <main className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 space-y-4">
+          <CameraSelector selectedCameraId={selectedCameraId} onSelect={setSelectedCameraId} />
           <VideoFeed />
         </div>
         <div className="lg:col-span-2">
