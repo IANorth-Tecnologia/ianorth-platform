@@ -1,13 +1,8 @@
+// Componente focado na renderização
 
-import React, { useState, useEffect } from 'react';
-import { FiBarChart2, FiCheckCircle, FiClock, FiCpu, FiHash } from 'react-icons/fi'; 
-
-interface AnalysisData {
-  currentCount: number;
-  targetCount: number;
-  status: 'contando' | 'concluido' | 'ocioso';
-  batchId: string;
-}
+import React from 'react';
+import { FiBarChart2, FiCheckCircle, FiClock, FiCpu, FiHash } from 'react-icons/fi';
+import { useAnalysisData } from '../hooks/useAnalysisData';
 
 const InfoCard: React.FC<{ icon: React.ReactNode; label: string; value: string; className?: string }> = ({ icon, label, value, className = '' }) => (
   <div className={`bg-white dark:bg-background-secondary p-4 rounded-lg flex items-center border border-gray-200 dark:border-background-tertiary ${className}`}>
@@ -23,40 +18,10 @@ const InfoCard: React.FC<{ icon: React.ReactNode; label: string; value: string; 
 
 export const AnalysisPanel: React.FC = () => {
   const TARGET_COUNT = 350;
-
-  const [data, setData] = useState<AnalysisData>({
-    currentCount: 0,
+  const { currentCount, targetCount, status, batchId, percentage } = useAnalysisData({
     targetCount: TARGET_COUNT,
-    status: 'contando',
-    batchId: 'LOTE-A4B8',
+    useSimulation: true, // Altere para false quando integrar com WebSocket
   });
-
-  useEffect(() => {
-    if (data.status !== 'contando' || data.currentCount >= TARGET_COUNT) {
-      if (data.currentCount >= TARGET_COUNT) {
-          setData(prev => ({ ...prev, status: 'concluido' }));
-      }
-      return;
-    }
-
-    const interval = setInterval(() => {
-      setData(prevData => {
-        const increment = Math.floor(Math.random() * 5) + 1;
-        const newCount = prevData.currentCount + increment;
-        
-        if (newCount >= TARGET_COUNT) {
-          clearInterval(interval);
-          return { ...prevData, currentCount: TARGET_COUNT, status: 'concluido' };
-        }
-        
-        return { ...prevData, currentCount: newCount };
-      });
-    }, 400);
-
-    return () => clearInterval(interval);
-  }, [data.status, data.currentCount]);
-
-  const percentage = Math.round((data.currentCount / data.targetCount) * 100);
 
   const statusInfo = {
     contando: { text: 'EM ANDAMENTO', color: 'text-yellow-400', icon: <FiClock size={24} /> },
@@ -64,7 +29,7 @@ export const AnalysisPanel: React.FC = () => {
     ocioso: { text: 'OCIOSO', color: 'text-gray-400', icon: <FiCpu size={24} /> },
   };
   
-  const progressBarColor = data.status === 'concluido' ? 'bg-green-500' : 'bg-blue-500';
+  const progressBarColor = status === 'concluido' ? 'bg-green-500' : 'bg-blue-500';
 
   return (
     <div className="bg-white/70 dark:bg-background-secondary/70 backdrop-blur-sm border border-gray-200 dark:border-background-tertiary rounded-xl shadow-lg p-6 h-full text-gray-900 dark:text-text-primary">
@@ -80,22 +45,22 @@ export const AnalysisPanel: React.FC = () => {
           <InfoCard 
             icon={<FiHash size={24}/>} 
             label="ID do Lote" 
-            value={data.batchId} 
+            value={batchId} 
           />
           <InfoCard 
-            icon={statusInfo[data.status].icon} 
+            icon={statusInfo[status].icon} 
             label="Status" 
-            value={statusInfo[data.status].text}
-            className={statusInfo[data.status].color}
+            value={statusInfo[status].text}
+            className={statusInfo[status].color}
           />
         </div>
 
         <div className="text-center bg-gray-50 dark:bg-background-primary p-6 rounded-lg border border-gray-200 dark:border-background-tertiary">
           <p className="text-gray-600 dark:text-text-secondary text-sm uppercase tracking-wider">Contagem Atual</p>
           <p className="text-6xl font-bold my-2 text-accent-secondary">
-            {data.currentCount}
+            {currentCount}
           </p>
-          <p className="text-gray-500 dark:text-text-tertiary">de {data.targetCount} peças</p>
+          <p className="text-gray-500 dark:text-text-tertiary">de {targetCount} peças</p>
         </div>
 
         <div>
@@ -111,7 +76,7 @@ export const AnalysisPanel: React.FC = () => {
           </div>
         </div>
 
-        {data.status === 'concluido' && (
+        {status === 'concluido' && (
           <div className="bg-status-success/10 border border-status-success/30 text-status-success text-center p-3 rounded-lg flex items-center justify-center">
             <FiCheckCircle className="mr-2"/>
             <p className="font-semibold text-sm">Lote concluído com sucesso!</p>
