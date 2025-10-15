@@ -9,9 +9,19 @@ import { useState } from 'react';
 export const App: React.FC = () => {
   const [selectedCameraId, setSelectedCameraId] = useState<string | undefined>(undefined);
 
+  // Mock mapping camera id -> stream URL (pode ser GIF/MP4/HLS na realidade)
+  const videoStreams: Record<string, string> = {
+    'cam-001': '/stream1.gif',
+    'cam-002': '/stream2.gif',
+    'cam-003': '/stream3.gif',
+    'cam-004': '/stream4.gif',
+  };
+
+  const streamUrl = selectedCameraId ? videoStreams[selectedCameraId] ?? undefined : undefined;
+
   return (
     <ThemeProvider>
-      <div className="bg-gray-50 dark:bg-background-primary dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] min-h-screen text-gray-900 dark:text-text-primary p-4 sm:p-6 lg:p-8 font-sans transition-colors duration-300">
+  <div className="app-container bg-gray-50 dark:bg-background-primary dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] min-h-screen text-gray-900 dark:text-text-primary font-sans transition-colors duration-300">
         
         <header className="flex items-center justify-between mb-8">
           <div className="flex items-center">
@@ -29,9 +39,9 @@ export const App: React.FC = () => {
         </header>
 
       <main className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        <div className="lg:col-span-3 space-y-4">
+        <div className="lg:col-span-3 space-y-4 min-h-[60vh]">
           <CameraSelector selectedCameraId={selectedCameraId} onSelect={setSelectedCameraId} />
-          <VideoFeed />
+          <VideoFeed streamUrl={streamUrl} />
         </div>
         <div className="lg:col-span-2">
           <AnalysisPanel />

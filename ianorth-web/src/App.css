@@ -1,8 +1,20 @@
 #root {
+  /* Permite que o root ocupe toda a viewport e não imponha padding
+     para que o layout interno (App.tsx) controle espaçamento responsivamente. */
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+/* Classe utilitária opcional: usar em um wrapper interno quando quiser
+   limitar a largura do conteúdo e manter padding consistente. */
+.app-container {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
-  text-align: center;
+  box-sizing: border-box;
 }
 
 .logo {
