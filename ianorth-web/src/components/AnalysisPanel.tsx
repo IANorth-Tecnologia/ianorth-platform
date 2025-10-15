@@ -16,11 +16,12 @@ const InfoCard: React.FC<{ icon: React.ReactNode; label: string; value: string; 
   </div>
 );
 
-export const AnalysisPanel: React.FC = () => {
+export const AnalysisPanel: React.FC<{ cameraId?: string }> = ({ cameraId }) => { // Recebe cameraId como prop
   const TARGET_COUNT = 350;
   const { currentCount, targetCount, status, batchId, percentage } = useAnalysisData({
     targetCount: TARGET_COUNT,
-    useSimulation: true, // Altere para false quando integrar com WebSocket
+    useSimulation: true, // Alterar para false quando integrar com WebSocket
+    cameraId,
   });
 
   const statusInfo = {

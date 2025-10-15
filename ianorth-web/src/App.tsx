@@ -44,7 +44,7 @@ export const App: React.FC = () => {
           <VideoFeed streamUrl={streamUrl} />
         </div>
         <div className="lg:col-span-2">
-          <AnalysisPanel />
+          <AnalysisPanel cameraId={selectedCameraId} />
         </div>
       </main>
 
