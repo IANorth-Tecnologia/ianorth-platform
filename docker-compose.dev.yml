@@ -1,0 +1,8 @@
+# docker-compose.dev.yml
+services:
+  worker_cam_patio_1:
+    build:
+      context: ./ianorth-api
+      dockerfile: Dockerfile.worker.dev
+    deploy:
+      resources: {}
