@@ -1,16 +1,20 @@
 from fastapi import APIRouter
+from typing import List
+from pydantic import BaseModel
+from app.core.config import settings
+
 
 router = APIRouter()
 
-CAMERAS_DB = [
-    {"id": "cam-patio-1", "name": "Câmera Pátio 1", "location": "Entrada Principal"},
-    {"id": "cam-esteira-5", "name": "Câmera Esteira 5", "location": "Linha de Produção B"},
-    {"id": "cam-doca-3", "name": "Câmera Doca 3", "location": "Área de Expedição"},
-]
+class Camera(BaseModel):
+    id: str
+    name: str
+    websocket_url: str
 
-@router.get("/cameras")
+
+@router.get("/cameras", response_model=List[Camera])
 def list_cameras():
     """
     Retorna a lista de câmeras configuradas no sistema.
     """
-    return CAMERAS_DB
+    return settings.CAMERAS

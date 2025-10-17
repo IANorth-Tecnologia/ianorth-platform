@@ -1,20 +1,22 @@
 
+# ianorth-api/Dockerfile.worker.dev
+
 FROM python:3.9-slim
 
 WORKDIR /app
 
+# Instala as dependências do OpenCV
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# 4. Copiar e instalar as dependências Python
-# PyTorch para Apple Silicon usará o backend "Metal" (MPS) para aceleração de GPU, não CUDA.
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+COPY ./app /app/app
 
 COPY ./workers /app/workers
 COPY ./ver70.pt /app/ver70.pt
 
-CMD ["python", "-u", "workers/inference_worker.py"] 
-
+CMD ["python", "-u", "workers/inference_worker.py"]
