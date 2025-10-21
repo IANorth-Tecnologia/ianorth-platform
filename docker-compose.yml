@@ -1,4 +1,5 @@
-# A linha 'version' pode ser removida, é obsoleta.
+
+
 services:
   # Fila de Mensagens com Healthcheck
   redis:
@@ -40,30 +41,32 @@ services:
       - "8898:8898"
     depends_on:
       db:
-        condition: service_healthy # <-- MÁGICA ACONTECE AQUI
+        condition: service_healthy 
       redis:
-        condition: service_healthy # <-- E AQUI
+        condition: service_healthy 
     restart: unless-stopped
 
   # Worker que espera o Healthcheck do Redis
-  worker_cam_patio_1:
+
+    worker:
     build:
       context: ./ianorth-api
       dockerfile: Dockerfile.worker
-    container_name: worker_cam_patio_1
+    container_name: ianorth_worker_service
     env_file:
       - ./ianorth-api/.env
+    volumes:
+      - ./ianorth-api/uploads:/app/uploads
+      - ./ianorth-api/models:/app/models:ro 
     depends_on:
-      redis:
-        condition: service_healthy # <-- E AQUI
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
     restart: unless-stopped
     deploy:
       resources:
         reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+          devices: [{ driver: nvidia, count: all, capabilities: [gpu] }]
+
 
 volumes:
   postgres_data:

@@ -1,26 +1,29 @@
-import os
-import sys
-import json
-import cv2
-import redis
-import torch
-import time
+import os, sys, json, cv2, redis, torch, time
 from ultralytics import YOLO
 from ultralytics.solutions import ObjectCounter
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 from app.core.database import SessionLocal
 from app.crud import lote_crud
+from app.core.config import settings
 
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-CAMERA_ID = os.getenv("CAMERA_ID", "default-cam")
-RTSP_URL = os.getenv("RTSP_URL")
-TARGET_COUNT = int(os.getenv("TARGET_COUNT", 350)) 
 
 UPLOADS_DIR = "/app/uploads"
 
-def main():
+def run(camera_id: str, rtsp_url: str, model_file: str):
+    """
+    Executa o processo de contagem de vergalhões para uma única câmera.
+    Esta funcão é projetada para ser executada com um processo separado. 
+    """
+
+    CAMERA_ID = camera_id
+    RTSP_URL = rtsp_url
+    REDIS_HOST = settings.REDIS_HOST
+    TARGET_COUNT = settings.TARGET_COUNT
+
+    print(f"[{CAMERA_ID}] Iniciando worker (Contagem de Vergalhões) para: {RTSP_URL}")
+
 
     if not RTSP_URL:
         print(f"[{CAMERA_ID}] ERRO CRÍTICO: A variável de ambiente RTSP_URL não foi definida. Encerrando worker.")
@@ -134,7 +137,6 @@ def main():
                 }
 
                 redis_client.publish(f"camera:{CAMERA_ID}", json.dumps(result_payload))
-
                 time.sleep(0.5)
 
             cap.release()
@@ -146,5 +148,3 @@ def main():
         print(f"[{CAMERA_ID}] Conexão com o banco de dados fechada.")
 
 
-if __name__ == "__main__":
-    main()
