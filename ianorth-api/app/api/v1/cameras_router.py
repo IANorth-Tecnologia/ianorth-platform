@@ -17,4 +17,4 @@ def list_cameras():
     """
     Retorna a lista de câmeras configuradas no sistema.
     """
-    return settings.CAMERAS
+    return settings.CAMERAS_FRONTEND

@@ -16,7 +16,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./app /app/app
 
-COPY ./workers /app/workers
-COPY ./ver70.pt /app/ver70.pt
+COPY ./models /app/models
 
-CMD ["python", "-u", "workers/inference_worker.py"]
+CMD ["python", "-u", "-m", "app.worker_dispatcher"]

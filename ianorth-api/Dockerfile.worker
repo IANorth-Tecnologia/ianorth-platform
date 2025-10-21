@@ -1,11 +1,16 @@
 FROM ultralytics/ultralytics:latest
-
 WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1 \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ./workers /app/workers
-COPY ./ver70.pt /app/ver70.pt
+COPY ./app /app/app
 
-CMD ["python", "-u", "workers/inference_worker.py"]
+COPY ./models /app/models 
+
+CMD ["python", "-u", "-m", "app.worker_dispatcher"]
