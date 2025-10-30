@@ -1,7 +1,5 @@
-
-
+# docker-compose.yml (BASE - Now Defaulting to DEV)
 services:
-  # Fila de Mensagens com Healthcheck
   redis:
     image: redis:alpine
     container_name: ianorth_redis
@@ -12,7 +10,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Banco de Dados com Healthcheck
   db:
     image: postgres:13
     container_name: ianorth_db
@@ -29,7 +26,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Gateway da API que espera os Healthchecks
   gateway:
     build:
       context: ./ianorth-api
@@ -39,34 +35,34 @@ services:
       - ./ianorth-api/.env
     ports:
       - "8898:8898"
+    volumes:
+      - ./ianorth-api/uploads:/app/uploads:ro # Keep this volume for snapshots
     depends_on:
       db:
-        condition: service_healthy 
+        condition: service_healthy
       redis:
-        condition: service_healthy 
+        condition: service_healthy
     restart: unless-stopped
 
-  # Worker que espera o Healthcheck do Redis
-
-    worker:
+  worker:
+    platform: linux/arm64
     build:
       context: ./ianorth-api
-      dockerfile: Dockerfile.worker
+      dockerfile: Dockerfile.worker.dev # Default to dev Dockerfile
     container_name: ianorth_worker_service
     env_file:
       - ./ianorth-api/.env
     volumes:
       - ./ianorth-api/uploads:/app/uploads
-      - ./ianorth-api/models:/app/models:ro 
+      - ./ianorth-api/models:/app/models:ro
     depends_on:
       db: { condition: service_healthy }
       redis: { condition: service_healthy }
     restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices: [{ driver: nvidia, count: all, capabilities: [gpu] }]
-
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices: [{ driver: nvidia, count: all, capabilities: [gpu] }]
 
 volumes:
   postgres_data:

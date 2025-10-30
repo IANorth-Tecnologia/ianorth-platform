@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./test.db")
-    TARGET_COUNT: int = int(os.getenv("TARGET_COUNT", 350))
+    TARGET_COUNT: int = int(os.getenv("TARGET_COUNT", 200))
 
 
     MODEL_REGISTRY: ClassVar[Dict[str, Dict[str, str]]] = {
@@ -18,16 +18,16 @@ class Settings(BaseSettings):
         },
 
 
-        "SAFETY_PPE": {
-            "script_path": "app.workers.ppe_detector_worker.run", 
-            "model_file": "/app/models/ppe_model.pt"
-        },
+       # "SAFETY_PPE": {
+       #     "script_path": "app.workers.ppe_detector_worker.run", 
+        #    "model_file": "/app/models/ppe_model.pt"
+        # },
     }
 
     CAMERA_REGISTRY: ClassVar[Dict[str, Dict[str, str]]] = {
         "cam_patio_1": {
             "name": "Pátio 1 (Ângulo A)",
-            "rtsp_url": "rtsp://system:sinobras10@10.6.58.74:554/cam/realmonitor?channel=1&subtype=1",
+            "rtsp_url": "/app/models/video_teste.mp4",
         },
         "cam_patio_2": {
             "name": "Pátio 1 (Ângulo B)",
@@ -68,10 +68,10 @@ class Settings(BaseSettings):
         },
 
 
-        {
-            "model_type": "SAFETY_PPE",
-            "camera_ids": ["cam_caldeiraria_1"] # O modelo de segurança 
-        }
+       # {
+        #    "model_type": "SAFETY_PPE",
+        #    "camera_ids": ["cam_caldeiraria_1"] # O modelo de segurança 
+        #}
     ]
 
     class Config:

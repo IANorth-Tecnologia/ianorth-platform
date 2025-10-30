@@ -1,8 +1,10 @@
-# docker-compose.dev.yml
+# docker-compose.dev.yml (Attempt 4: Explicit Platform)
 services:
-  worker_cam_patio_1:
+  worker:
+    platform: linux/arm64 # Explicitly target ARM for Mac development
     build:
       context: ./ianorth-api
       dockerfile: Dockerfile.worker.dev
     deploy:
-      resources: {}
+      resources:
+        reservations: {}
