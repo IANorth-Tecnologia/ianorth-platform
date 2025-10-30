@@ -1,16 +1,18 @@
-FROM ultralytics/ultralytics:latest
+# ianorth-api/Dockerfile.worker.dev
+FROM ultralytics/ultralytics:latest # Make sure this is the first line
+
 WORKDIR /app
 
+# Instala as dependências do OpenCV (Still potentially needed)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
+# Pip will now install only the remaining dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./app /app/app
-
-COPY ./models /app/models 
 
 CMD ["python", "-u", "-m", "app.worker_dispatcher"]

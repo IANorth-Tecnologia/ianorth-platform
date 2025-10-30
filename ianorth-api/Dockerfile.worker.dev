@@ -1,7 +1,6 @@
 
 # ianorth-api/Dockerfile.worker.dev
-
-FROM python:3.9-slim
+FROM ultralytics/ultralytics:latest
 
 WORKDIR /app
 
@@ -16,6 +15,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./app /app/app
 
-COPY ./models /app/models
 
 CMD ["python", "-u", "-m", "app.worker_dispatcher"]

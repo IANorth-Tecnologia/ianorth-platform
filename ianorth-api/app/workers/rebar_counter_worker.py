@@ -21,10 +21,20 @@ def run(camera_id: str, rtsp_url: str, model_file: str):
     RTSP_URL = rtsp_url
     REDIS_HOST = settings.REDIS_HOST
     TARGET_COUNT = settings.TARGET_COUNT
+    
+    is_video_file = not RTSP_URL.startswith("rtsp://")
 
     print(f"[{CAMERA_ID}] Iniciando worker (Contagem de Vergalhões) para: {RTSP_URL}")
+    print(f"[{CAMERA_ID}] Modo Arquivo de Vídeo (Loop): {is_video_file}")
 
+    if is_video_file:
+        W, H = 600, 800
+        print(f"[{CAMERA_ID}] Usando dimensões de Retrato ({W}, {H}) para o arquivo de teste.")
+    else:
+        W, H = 800, 600
+        print(f"[{CAMERA_ID}] Usando dimensões de Paisagem ({W}, {H}) para o stream RTSP.")
 
+      
     if not RTSP_URL:
         print(f"[{CAMERA_ID}] ERRO CRÍTICO: A variável de ambiente RTSP_URL não foi definida. Encerrando worker.")
         return
@@ -47,17 +57,17 @@ def run(camera_id: str, rtsp_url: str, model_file: str):
     else:
         print(f"[{CAMERA_ID}] AVISO: GPU não encontrada. Usando CPU.")
 
-    model = YOLO("/app/ver70.pt")
-    region_points = [(0, 0), (800, 0), (800, 600), (0, 600)]
+    model = YOLO("/app/models/ver70.pt")
+    region_points = [(0, 0), (W, 0), (W, H), (0, H)]
     
-    counter = ObjectCounter()
+    counter = ObjectCounter(model="/app/models/ver70.pt")
     counter.reg_pts = region_points
     counter.names = model.names
     counter.draw_tracks = False
 
     os.makedirs(UPLOADS_DIR, exist_ok=True)
 
-    active_lote = None 
+    active_lote = None
 
     try:
         while True:
@@ -77,17 +87,33 @@ def run(camera_id: str, rtsp_url: str, model_file: str):
             print(f"[{CAMERA_ID}] Conexão bem-sucedida. Iniciando processamento.")
             while cap.isOpened():
                 success, frame = cap.read()
+                
                 if not success:
-                    print(f"[{CAMERA_ID}] Frame não pôde ser lido.")
-                    break
+                    if is_video_file:
+                        print(f"[{CAMERA_ID}] Vídeo de teste finalizado. Reiniciando (loop)...")
+                        cap.set(cv2.CAP_PROP_POS_FRAMES, 0) 
+                        continue 
+                    else:
+                        print(f"[{CAMERA_ID}] Frame não pôde ser lido (stream RTSP desconectado?).")
+                        break 
 
-                im0 = cv2.resize(frame, (800, 600))
+                im0 = cv2.resize(frame, (W, H))
+
+                if is_video_file:
+                    im0 = cv2.rotate(im0, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
                 _, jpeg_frame = cv2.imencode('.jpg', im0)
-                redis_client.set(f"video_feed:{CAMERA_ID}", jpeg_frame.tobytes())
-                tracks = model.track(im0, persist=True, show=False, verbose=False)
-                counted_frame = counter.start_counting(im0, tracks)
-                current_count = counter.in_counts
 
+                results = model.track(im0, persist=True, show=False, verbose=False)
+                counter(im0)
+                #current_count = 0
+                current_count = counter.in_count
+
+                #_, jpeg_frame = cv2.imencode('.jpg', im0)
+                redis_client.set(f"video_feed:{CAMERA_ID}", jpeg_frame.tobytes())
+
+
+                              
                 status = "Aguardando"
                 progress = 0
                 lote_id = None
@@ -123,8 +149,8 @@ def run(camera_id: str, rtsp_url: str, model_file: str):
                         }
                         redis_client.publish(f"camera:{CAMERA_ID}", json.dumps(final_result))
                         
-                        active_lote = None 
-                        time.sleep(10) 
+                        active_lote = None
+                        time.sleep(10)
                         continue
 
                 result_payload = {
@@ -137,14 +163,18 @@ def run(camera_id: str, rtsp_url: str, model_file: str):
                 }
 
                 redis_client.publish(f"camera:{CAMERA_ID}", json.dumps(result_payload))
-                time.sleep(0.5)
+                #time.sleep(0.5) 
 
             cap.release()
             print(f"[{CAMERA_ID}] Conexão com a câmera perdida. Tentando reconectar...")
-            time.sleep(5)
+           
+
+            if is_video_file:
+                print(f"[{CAMERA_ID}] Fonte era um arquivo de vídeo. Encerrando worker.")
+                break # Sai do loop 'while True'
+            
+            #time.sleep(5) # Sleep para reconexão de RTSP
             
     finally:
         db.close()
         print(f"[{CAMERA_ID}] Conexão com o banco de dados fechada.")
-
-

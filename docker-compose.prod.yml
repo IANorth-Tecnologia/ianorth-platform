@@ -1,0 +1,11 @@
+# docker-compose.prod.yml (Overrides for Production)
+services:
+  worker:
+    build:
+      # Override the Dockerfile for production
+      dockerfile: Dockerfile.worker
+    # Add the GPU deployment configuration ONLY for production
+    deploy:
+      resources:
+        reservations:
+          devices: [{ driver: nvidia, count: all, capabilities: [gpu] }]
