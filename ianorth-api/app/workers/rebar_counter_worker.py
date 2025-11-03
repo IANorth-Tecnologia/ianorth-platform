@@ -63,11 +63,12 @@ def run(camera_id: str, rtsp_url: str, model_file: str):
     counter = ObjectCounter(model="/app/models/ver70.pt")
     counter.reg_pts = region_points
     counter.names = model.names
-    counter.draw_tracks = False
+    counter.draw_tracks = False # Mude para True se quiser ver as trilhas
 
     os.makedirs(UPLOADS_DIR, exist_ok=True)
 
     active_lote = None
+    cooldown_active = False # Nosso estado de "resfriamento"
 
     try:
         while True:
@@ -82,9 +83,10 @@ def run(camera_id: str, rtsp_url: str, model_file: str):
             if active_lote:
                 print(f"[{CAMERA_ID}] Lote ativo ID {active_lote.id} encontrado no banco de dados.")
             else:
-                print(f"[{CAMERA_ID}] Nenhum lote ativo encontrado. Aguardando início da contagem para criar um novo.")
+                print(f"[{CAMERA_ID}] Nenhum lote ativo encontrado. Aguardando...")
 
             print(f"[{CAMERA_ID}] Conexão bem-sucedida. Iniciando processamento.")
+            
             while cap.isOpened():
                 success, frame = cap.read()
                 
@@ -102,56 +104,69 @@ def run(camera_id: str, rtsp_url: str, model_file: str):
                 if is_video_file:
                     im0 = cv2.rotate(im0, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
-                _, jpeg_frame = cv2.imencode('.jpg', im0)
-
                 results = model.track(im0, persist=True, show=False, verbose=False)
-                counter(im0)
-                #current_count = 0
-                current_count = counter.in_count
-
-                #_, jpeg_frame = cv2.imencode('.jpg', im0)
+                counter(im0) 
+                current_count = counter.in_count 
+                _, jpeg_frame = cv2.imencode('.jpg', im0)
                 redis_client.set(f"video_feed:{CAMERA_ID}", jpeg_frame.tobytes())
 
+                if cooldown_active and current_count == 0:
+                    print(f"[{CAMERA_ID}] Campo limpo. Cooldown finalizado. Pronto para novo lote.")
+                    cooldown_active = False
+                   
+                elif active_lote and current_count >= TARGET_COUNT:
+                    print(f"[{CAMERA_ID}] LOTE CONCLUÍDO! ID: {active_lote.id}, Contagem final: {current_count}")
+                    
+                    image_filename = f"lote_{active_lote.id}.jpg"
+                    image_save_path = os.path.join(UPLOADS_DIR, image_filename)
+                    cv2.imwrite(image_save_path, im0) 
+                    print(f"[{CAMERA_ID}] Imagem do lote salva em: {image_save_path}")
 
-                              
-                status = "Aguardando"
-                progress = 0
-                lote_id = None
-                
-                if not active_lote and current_count > 0:
+                    lote_crud.finalize_lote(
+                        db, 
+                        lote_id=active_lote.id, 
+                        final_count=current_count,
+                        image_path=image_filename
+                    )
+
+                    status = "Concluído"
+                    lote_id = active_lote.id
+                    progress = 100
+
+                    final_result = {
+                        "cameraId": CAMERA_ID, "loteId": lote_id, "currentCount": current_count,
+                        "targetCount": TARGET_COUNT, "progress": 100, "status": status
+                    }
+                    redis_client.publish(f"camera:{CAMERA_ID}", json.dumps(final_result))
+
+                    active_lote = None
+                    cooldown_active = True # Inicia o cooldown
+
+                    # Reinicia o contador
+                    counter = ObjectCounter(model="/app/models/ver70.pt")
+                    counter.reg_pts = region_points
+                    counter.names = model.names
+                    counter.draw_tracks = False
+                    print(f"[{CAMERA_ID}] Contagem reiniciada. Entrando em cooldown até o campo ficar limpo.")
+
+                    continue
+
+                elif not active_lote and not cooldown_active and current_count > 0:
                     active_lote = lote_crud.create_lote(db, camera_id=CAMERA_ID)
                     print(f"[{CAMERA_ID}] NOVO LOTE INICIADO! ID: {active_lote.id}, Contagem inicial: {current_count}")
-                
+
                 if active_lote:
                     status = "Em Andamento"
                     lote_id = active_lote.id
                     progress = min(100, (current_count / TARGET_COUNT) * 100)
-
-                    if current_count >= TARGET_COUNT:
-
-                        image_filename = f"lote_{active_lote.id}.jpg"
-                        image_save_path = os.path.join(UPLOADS_DIR, image_filename)
-                        cv2.imwrite(image_save_path, im0)
-                        print(f"[{CAMERA_ID}] Imagem do lote salva em: {image_save_path}")
-
-                        lote_crud.finalize_lote(
-                            db, 
-                            lote_id=active_lote.id, 
-                            final_count=current_count,
-                            image_path=image_save_path
-                        )
-                        print(f"[{CAMERA_ID}] LOTE CONCLUÍDO! ID: {active_lote.id}, Contagem final: {current_count}")
-                        status = "Concluído"
-                        
-                        final_result = {
-                            "cameraId": CAMERA_ID, "loteId": lote_id, "currentCount": current_count,
-                            "targetCount": TARGET_COUNT, "progress": 100, "status": status
-                        }
-                        redis_client.publish(f"camera:{CAMERA_ID}", json.dumps(final_result))
-                        
-                        active_lote = None
-                        time.sleep(10)
-                        continue
+                elif cooldown_active:
+                    status = "Cooldown"
+                    lote_id = None
+                    progress = 0 
+                else:
+                    status = "Aguardando"
+                    lote_id = None
+                    progress = 0 
 
                 result_payload = {
                     "cameraId": CAMERA_ID,
@@ -161,19 +176,18 @@ def run(camera_id: str, rtsp_url: str, model_file: str):
                     "progress": round(progress, 2),
                     "status": status
                 }
-
                 redis_client.publish(f"camera:{CAMERA_ID}", json.dumps(result_payload))
+                
                 #time.sleep(0.5) 
 
             cap.release()
             print(f"[{CAMERA_ID}] Conexão com a câmera perdida. Tentando reconectar...")
            
-
             if is_video_file:
                 print(f"[{CAMERA_ID}] Fonte era um arquivo de vídeo. Encerrando worker.")
-                break # Sai do loop 'while True'
+                break 
             
-            #time.sleep(5) # Sleep para reconexão de RTSP
+            #time.sleep(5) 
             
     finally:
         db.close()
