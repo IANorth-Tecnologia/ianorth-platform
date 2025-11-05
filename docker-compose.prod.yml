@@ -1,10 +1,10 @@
 # docker-compose.prod.yml (Overrides for Production)
 services:
   worker:
+    platform: linux/amd64
     build:
-      # Override the Dockerfile for production
-      dockerfile: Dockerfile.worker
-    # Add the GPU deployment configuration ONLY for production
+      context: .
+      dockerfile: ./ianorth-api/Dockerfile.worker
     deploy:
       resources:
         reservations:

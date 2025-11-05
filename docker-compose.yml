@@ -25,11 +25,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
   gateway:
     build:
-      context: ./ianorth-api
-      dockerfile: Dockerfile.gateway
+      context: .
+      dockerfile: ./ianorth-api/Dockerfile.gateway
     container_name: ianorth_gateway
     env_file:
       - ./ianorth-api/.env
@@ -47,8 +46,8 @@ services:
   worker:
     platform: linux/arm64
     build:
-      context: ./ianorth-api
-      dockerfile: Dockerfile.worker.dev # Default to dev Dockerfile
+      context: .
+      dockerfile: ./ianorth-api/Dockerfile.worker.dev # Default to dev Dockerfile
     container_name: ianorth_worker_service
     env_file:
       - ./ianorth-api/.env
@@ -63,6 +62,5 @@ services:
     #   resources:
     #     reservations:
     #       devices: [{ driver: nvidia, count: all, capabilities: [gpu] }]
-
 volumes:
   postgres_data:

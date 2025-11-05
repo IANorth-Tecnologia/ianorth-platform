@@ -8,6 +8,7 @@ class LoteHistorico(BaseModel):
     start_time: datetime.datetime
     end_time: Optional[datetime.datetime]
     final_count: int
+    image_path: Optional[str] = None
 
     class Config:
         from_attributes = True 

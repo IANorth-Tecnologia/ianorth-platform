@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { getHistoricoLotes, type LoteHistorico } from '../../services/loteService';
 import { FiArchive, FiLoader } from 'react-icons/fi';
 
+const API_BASE_URL = 'http://localhost:8898';
+
 const HistoricoLotes: React.FC = () => {
   const [lotes, setLotes] = useState<LoteHistorico[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,7 +20,6 @@ const HistoricoLotes: React.FC = () => {
     fetchHistorico();
   }, []);
 
-  // Formata a data para um padrão mais legível (DD/MM/YYYY HH:MM)
   const formatarData = (dataString: string | null) => {
     if (!dataString) return 'N/A';
     const data = new Date(dataString);
@@ -57,6 +58,7 @@ const HistoricoLotes: React.FC = () => {
               <th scope="col" className="px-4 py-3">Contagem Final</th>
               <th scope="col" className="px-4 py-3">Início</th>
               <th scope="col" className="px-4 py-3">Fim</th>
+              <th scope="col" className="px-4 py-3">Snapshot</th>
             </tr>
           </thead>
           <tbody>
@@ -68,11 +70,28 @@ const HistoricoLotes: React.FC = () => {
                   <td className="px-4 py-3 font-bold text-accent-secondary">{lote.final_count}</td>
                   <td className="px-4 py-3">{formatarData(lote.start_time)}</td>
                   <td className="px-4 py-3">{formatarData(lote.end_time)}</td>
+                  <td className="px-4 py-3">
+                    {lote.image_path ? (
+                      <a 
+                        href={`${API_BASE_URL}/uploads/${lote.image_path}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                      >
+                        <img 
+                          src={`${API_BASE_URL}/uploads/${lote.image_path}`} 
+                          alt={`Snapshot Lote ${lote.id}`} 
+                          className="w-24 h-auto rounded hover:opacity-80 transition-opacity"
+                        />
+                      </a>
+                    ) : (
+                      'N/A'
+                    )}
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="text-center py-8 text-gray-500">
+                <td colSpan={6} className="text-center py-8 text-gray-500">
                   Nenhum lote concluído encontrado.
                 </td>
               </tr>
