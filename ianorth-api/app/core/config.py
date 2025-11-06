@@ -31,7 +31,7 @@ class Settings(BaseSettings):
         },
         "cam_patio_2": {
             "name": "Pátio 1 (Ângulo B)",
-            "rtsp_url": "rtsp://admin:eletricasnb2021@10.6.58.75:554/stream",
+            "rtsp_url": "rtsp://admin:eletricasnb2021@10.6.58.207:554/cam/realmonitor?channel=1&subtype=1",
         },
 
 
