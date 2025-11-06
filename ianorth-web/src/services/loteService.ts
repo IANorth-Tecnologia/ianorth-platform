@@ -9,6 +9,7 @@ export interface LoteHistorico {
   start_time: string;
   end_time: string | null;
   final_count: number;
+  image_path: string | null;
 }
 
 export const getHistoricoLotes = async (): Promise<LoteHistorico[]> => {
