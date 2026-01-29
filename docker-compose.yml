@@ -1,5 +1,3 @@
-
-
 services:
   # Fila de Mensagens com Healthcheck
   redis:
@@ -29,7 +27,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # Gateway da API que espera os Healthchecks
+  # Gateway da API
   gateway:
     build:
       context: ./ianorth-api
@@ -46,9 +44,9 @@ services:
         condition: service_healthy 
     restart: unless-stopped
 
-  # Worker que espera o Healthcheck do Redis
-
-    worker:
+  # --- CORREÇÃO DE INDENTAÇÃO ---
+  # 'worker' está agora no mesmo nível de 'gateway'
+  worker:
     build:
       context: ./ianorth-api
       dockerfile: Dockerfile.worker
@@ -67,6 +65,20 @@ services:
         reservations:
           devices: [{ driver: nvidia, count: all, capabilities: [gpu] }]
 
+  # --- CORREÇÃO DE INDENTAÇÃO ---
+  # 'frontend' está agora no mesmo nível de 'gateway'
+  frontend:
+    build:
+      context: ./ianorth-web        
+      dockerfile: Dockerfile    
+    container_name: ianorth_frontend # Esta linha também foi corrigida
+    ports:
+      - "80:80" 
+    depends_on:
+      - gateway
+    restart: unless-stopped
 
+# --- CORREÇÃO DE INDENTAÇÃO ---
+# 'volumes' deve estar no nível superior (sem recuo)
 volumes:
   postgres_data:

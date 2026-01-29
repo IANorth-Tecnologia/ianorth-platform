@@ -146,5 +146,3 @@ def run(camera_id: str, rtsp_url: str, model_file: str):
     finally:
         db.close()
         print(f"[{CAMERA_ID}] Conexão com o banco de dados fechada.")
-
-

@@ -1,18 +1,25 @@
-
-# ianorth-api/Dockerfile.worker.dev
-
 FROM python:3.9-slim
 
 WORKDIR /app
 
-# Instala as dependências do OpenCV
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
+# Atualiza pip
+RUN pip install --no-cache-dir --upgrade pip
+
+# Copia e instala as dependências Python
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Aumenta o timeout para garantir que o torch baixe
+RUN pip install --no-cache-dir --timeout 600 -r requirements.txt
+
+# --- AQUI ESTÁ A CORREÇÃO REAL ---
+# Define a variável de ambiente para desabilitar a checagem 'weights_only'
+ENV TORCH_LOAD_WEIGHTS_ONLY=0
+# -----------------------------------
 
 COPY ./app /app/app
 

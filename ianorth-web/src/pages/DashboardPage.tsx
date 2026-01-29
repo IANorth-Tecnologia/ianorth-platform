@@ -8,7 +8,7 @@ import { VideoFeed } from '../components/VideoFeed';
 import { CameraSelector } from '../components/CameraSelector';
 import HistoricoLotes from '../components/historico/HistoricoLotes';
 
-const API_BASE_URL = 'http://localhost:8898/api/v1';
+const API_BASE_URL_v1 = 'http://localhost:8898/api/v1';
 
 export const DashboardPage: React.FC = () => {
   const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
@@ -19,7 +19,7 @@ export const DashboardPage: React.FC = () => {
   };
 */
     const streamUrl = selectedCameraId 
-    ? `${API_BASE_URL}/video_feed/${selectedCameraId}` 
+    ? `${API_BASE_URL_v1}/video_feed/${selectedCameraId}` 
     : undefined;
 
 

@@ -15,8 +15,11 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ streamUrl }) => {
           src={streamUrl}
           alt="Monitoramento ao Vivo"
           className="w-full h-full object-contain"
-          onError={(e) => { e.currentTarget.style.display = 'none'; }}
-        />
+          onError={(e) => {
+            console.error(`FALHA AO CARREGAR O STREAM: ${e.currentTarget.src}`, e);
+            e.currentTarget.src = ''; 
+            e.currentTarget.alt = 'Falha ao carregar o stream de vídeo. Verifique o console e os logs do worker.';
+          }}      />
       ) : (
         <div className="flex flex-col items-center">
           <FiVideoOff size={48} className="mb-4" />

@@ -14,3 +14,4 @@ COPY ./app /app/app
 COPY ./models /app/models 
 
 CMD ["python", "-u", "-m", "app.worker_dispatcher"]
+

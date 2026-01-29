@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     CAMERA_REGISTRY: ClassVar[Dict[str, Dict[str, str]]] = {
         "cam_patio_1": {
             "name": "Pátio 1 (Ângulo A)",
-            "rtsp_url": "rtsp://system:sinobras10@10.6.58.74:554/cam/realmonitor?channel=1&subtype=1",
+            "rtsp_url": "/app/models/video_teste.mp4",
         },
         "cam_patio_2": {
             "name": "Pátio 1 (Ângulo B)",
@@ -68,10 +68,10 @@ class Settings(BaseSettings):
         },
 
 
-        {
-            "model_type": "SAFETY_PPE",
-            "camera_ids": ["cam_caldeiraria_1"] # O modelo de segurança 
-        }
+       # {
+         #   "model_type": "SAFETY_PPE",
+        #   "camera_ids": ["cam_caldeiraria_1"] # O modelo de segurança 
+       # }
     ]
 
     class Config:
