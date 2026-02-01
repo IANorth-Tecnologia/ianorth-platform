@@ -1,19 +1,25 @@
-# ianorth-api/Dockerfile.worker.dev
-FROM ultralytics/ultralytics:latest 
+FROM ultralytics/ultralytics:8.2.0
 
 WORKDIR /app
-
-# Instala as dependências do OpenCV (Still potentially needed)
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
+# Copiamos o requirements
 COPY ./ianorth-api/requirements.txt .
-# Pip will now install only the remaining dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+
+# REMOÇÃO IMPORTANTE: Para o Docker, vamos remover torch e ultralytics 
+# do requirements.txt para não sobrescrever a versão otimizada da imagem base.
+RUN sed -i '/torch/d' requirements.txt && \
+    sed -i '/ultralytics/d' requirements.txt && \
+    pip install --no-cache-dir -r requirements.txt
 
 COPY ./ianorth-api/app /app/app
+COPY ./ianorth-api/models /app/models
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 CMD ["python", "-u", "-m", "app.worker_dispatcher"]

@@ -11,6 +11,27 @@ from app.core.config import settings
 
 UPLOADS_DIR = "/app/uploads"
 
+
+def cleanup_uploads(directory, max_files=200):
+    """
+    Mantém apenas os arquivos mais recentes no diretório de uploads para economizar disco.
+    """
+    try:
+        files = [os.path.join(directory, f) for f in os.listdir(directory) 
+                 if os.path.isfile(os.path.join(directory, f))]
+        
+        if len(files) > max_files:
+            files.sort(key=os.path.getmtime)
+            
+            to_delete = files[:len(files) - max_files]
+            for f in to_delete:
+                os.remove(f)
+                print(f"[CLEANUP] Removido arquivo antigo: {os.path.basename(f)}")
+    except Exception as e:
+        print(f"[CLEANUP] Erro na limpeza: {e}")
+
+
+
 def run(camera_id: str, rtsp_url: str, model_file: str):
     """
     Executa o processo de contagem de vergalhões para uma única câmera.
@@ -121,6 +142,8 @@ def run(camera_id: str, rtsp_url: str, model_file: str):
                     image_save_path = os.path.join(UPLOADS_DIR, image_filename)
                     cv2.imwrite(image_save_path, im0) 
                     print(f"[{CAMERA_ID}] Imagem do lote salva em: {image_save_path}")
+
+                    cleanup_uploads(UPLOADS_DIR, max_files=200)
 
                     lote_crud.finalize_lote(
                         db, 

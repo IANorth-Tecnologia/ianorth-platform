@@ -89,8 +89,20 @@ coverage.xml
 *.cfg
 *.ini
 
+node_modules/
+ianorth-web/node_modules/
+**/node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
 *.log
 logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Ignorar uploads e arquivos grandes
+ianorth-api/uploads/
+ianorth-api/models/*.mp4
+ianorth-api/models/*.pt
