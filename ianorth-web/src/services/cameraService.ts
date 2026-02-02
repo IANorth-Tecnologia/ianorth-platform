@@ -15,7 +15,7 @@ const CAMERAS: Camera[] = [
   { id: 'cam-004', name: 'Câmera Saída', location: 'Embalagem' },
 ];*/ 
 
-const API_BASE_URL = 'http://localhost:8898/api/v1';
+const API_BASE_URL = '/api/v1';
 
 export async function getCameras(): Promise<Camera[]> {
 
