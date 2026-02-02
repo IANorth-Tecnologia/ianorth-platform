@@ -200,6 +200,10 @@ def run(camera_id: str, rtsp_url: str, model_file: str):
                     "status": status
                 }
                 redis_client.publish(f"camera:{CAMERA_ID}", json.dumps(result_payload))
+
+                ret, buffer = cv2.imencode('.jpg', im0)
+                if ret:
+                    redis_client.setex(f"video_feed:{CAMERA_ID}", 2, buffer.tobytes())
                 
                 #time.sleep(0.5) 
 
