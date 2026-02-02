@@ -10,7 +10,7 @@ export interface AnalysisData {
 
 class AnalysisService { // Gerencia a conexão WebSocket e simulação de dados
   private wsConnection: WebSocket | null = null;
-  private readonly wsBaseUrl = 'ws://localhost:8898/ws/';
+  private readonly wsBaseUrl = `ws://${window.location.host}/ws/`;
 
     
 

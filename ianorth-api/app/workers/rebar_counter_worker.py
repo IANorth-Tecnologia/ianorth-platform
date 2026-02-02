@@ -129,7 +129,7 @@ def run(camera_id: str, rtsp_url: str, model_file: str):
                 counter(im0) 
                 current_count = counter.in_count 
                 # _, jpeg_frame = cv2.imencode('.jpg', im0)
-                # redis_client.set(f"video_feed:{CAMERA_ID}", jpeg_frame.tobytes())
+                #redis_client.set(f"video_feed:{CAMERA_ID}", jpeg_frame.tobytes())
 
                 if cooldown_active and current_count == 0:
                     print(f"[{CAMERA_ID}] Campo limpo. Cooldown finalizado. Pronto para novo lote.")
@@ -203,7 +203,7 @@ def run(camera_id: str, rtsp_url: str, model_file: str):
 
                 ret, buffer = cv2.imencode('.jpg', im0)
                 if ret:
-                    redis_client.setex(f"video_feed:{CAMERA_ID}", 2, buffer.tobytes())
+                    redis_client.setex(f"video_feed:{CAMERA_ID}", 10, buffer.tobytes())
                 
                 #time.sleep(0.5) 
 
