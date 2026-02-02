@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { getHistoricoLotes, type LoteHistorico } from '../../services/loteService';
 import { FiArchive, FiLoader } from 'react-icons/fi';
 
-const API_BASE_URL = 'http://localhost:8898';
+const API_BASE_URL = '';
 
 const HistoricoLotes: React.FC = () => {
   const [lotes, setLotes] = useState<LoteHistorico[]>([]);
