@@ -12,7 +12,7 @@ from app.core.config import settings
 UPLOADS_DIR = "/app/uploads"
 
 
-def cleanup_uploads(directory, max_files=200):
+def cleanup_uploads(directory, max_files=100):
     """
     Mantém apenas os arquivos mais recentes no diretório de uploads para economizar disco.
     """
@@ -78,10 +78,11 @@ def run(camera_id: str, rtsp_url: str, model_file: str):
     else:
         print(f"[{CAMERA_ID}] AVISO: GPU não encontrada. Usando CPU.")
 
-    model = YOLO("/app/models/ver70.pt")
-    region_points = [(0, 0), (W, 0), (W, H), (0, H)]
+    model = YOLO("/app/models/ver37.pt")
+    #region_points = [(0, 0), (W, 0), (W, H), (0, H)]
+    region_points = [(0, 0), (0, 600), (800, 600), (800, 0)]
     
-    counter = ObjectCounter(model="/app/models/ver70.pt")
+    counter = ObjectCounter(model="/app/models/ver37.pt")
     counter.reg_pts = region_points
     counter.names = model.names
     counter.draw_tracks = False # Mude para True se quiser ver as trilhas
@@ -125,9 +126,9 @@ def run(camera_id: str, rtsp_url: str, model_file: str):
                 if is_video_file:
                     im0 = cv2.rotate(im0, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
-                results = model.track(im0, persist=True, show=False, verbose=False)
+                results = model.track(im0, persist=True, show=False, verbose=False , show_labels=False)
                 counter(im0) 
-                current_count = counter.in_count 
+                current_count = counter(im0)  #counter.in_count 
                 # _, jpeg_frame = cv2.imencode('.jpg', im0)
                 #redis_client.set(f"video_feed:{CAMERA_ID}", jpeg_frame.tobytes())
 
@@ -166,7 +167,7 @@ def run(camera_id: str, rtsp_url: str, model_file: str):
                     cooldown_active = True # Inicia o cooldown
 
                     # Reinicia o contador
-                    counter = ObjectCounter(model="/app/models/ver70.pt")
+                    counter = ObjectCounter(model="/app/models/ver37.pt")
                     counter.reg_pts = region_points
                     counter.names = model.names
                     counter.draw_tracks = False

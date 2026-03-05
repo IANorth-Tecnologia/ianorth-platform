@@ -8,13 +8,13 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./test.db")
-    TARGET_COUNT: int = int(os.getenv("TARGET_COUNT", 200))
+    TARGET_COUNT: int = int(os.getenv("TARGET_COUNT", 140))
 
 
     MODEL_REGISTRY: ClassVar[Dict[str, Dict[str, str]]] = {
         "REBAR_COUNTER": {
             "script_path": "app.workers.rebar_counter_worker.run", 
-            "model_file": "/app/models/ver70.pt"
+            "model_file": "/app/models/ver37.pt"
         },
 
 
@@ -27,11 +27,10 @@ class Settings(BaseSettings):
     CAMERA_REGISTRY: ClassVar[Dict[str, Dict[str, str]]] = {
         "cam_patio_1": {
             "name": "Pátio 1 (Ângulo A)",
-            "rtsp_url": "/app/models/video_teste.mp4",
+            "rtsp_url":os.getenv("RTSP_URL", "rtsp://admin:eletricasnb2021@10.6.58.207:554/cam/realmonitor?channel=1&subtype=0"),
         },
         "cam_patio_2": {
             "name": "Pátio 1 (Ângulo B)",
-            "rtsp_url": "rtsp://admin:eletricasnb2021@10.6.58.207:554/cam/realmonitor?channel=1&subtype=1",
         },
 
 

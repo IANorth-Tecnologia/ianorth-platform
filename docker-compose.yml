@@ -33,7 +33,7 @@ services:
     env_file:
       - ./ianorth-api/.env
     ports:
-      - "8898:8898"
+      - "8036:8898"
     volumes:
       - ./ianorth-api/uploads:/app/uploads:ro # Keep this volume for snapshots
     depends_on:
@@ -58,18 +58,18 @@ services:
       db: { condition: service_healthy }
       redis: { condition: service_healthy }
     restart: unless-stopped
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices: [{ driver: nvidia, count: all, capabilities: [gpu] }]
+     deploy:
+       resources:
+         reservations:
+           devices: [{ driver: nvidia, count: all, capabilities: [gpu] }]
 
   frontend:
     build:
-      context: .
-      dockerfile: ./ianorth-web/Dockerfile 
+      context:  ./ianorth-web
+      dockerfile: Dockerfile 
     container_name: ianorth_frontend 
     ports:
-      - "80:80" 
+      - "8026:80" 
     depends_on:
       - gateway
     restart: unless-stopped

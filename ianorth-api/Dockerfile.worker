@@ -1,20 +1,19 @@
-FROM ultralytics/ultralytics:8.2.0
+
+FROM ultralytics/ultralytics:latest
 
 WORKDIR /app
+
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiamos o requirements
 COPY ./ianorth-api/requirements.txt .
 
-# REMOÇÃO IMPORTANTE: Para o Docker, vamos remover torch e ultralytics 
-# do requirements.txt para não sobrescrever a versão otimizada da imagem base.
+
 RUN sed -i '/torch/d' requirements.txt && \
-    sed -i '/ultralytics/d' requirements.txt && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir --upgrade -r requirements.txt
 
 COPY ./ianorth-api/app /app/app
 COPY ./ianorth-api/models /app/models
