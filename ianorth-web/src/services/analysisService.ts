@@ -1,56 +1,69 @@
 
-
-export interface AnalysisData { 
-  loteId: number | null;  
+export interface AnalysisData {
+  cameraId: string;
+  loteId: number | null;
   currentCount: number;
   targetCount: number;
-  progress: number;  
-  status: 'Em Andamento' | 'Concluído' | 'Aguardando';
+  progress: number;
+  status: 'Aguardando' | 'Em Andamento' | 'Concluído' | 'Cooldown';
 }
 
+type MessageCallback = (data: AnalysisData) => void;
+
 class AnalysisService {
-  removeListener(handleNewData: (newData: AnalysisData) => void) {
-      throw new Error('Method not implemented.');
-  } // Gerencia a conexão WebSocket e simulação de dados
-  private wsConnection: WebSocket | null = null;
-  private readonly wsBaseUrl = `ws://${window.location.host}/ws/`;
+  private socket: WebSocket | null = null;
+  private callbacks: MessageCallback[] = [];
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private currentCameraId: string | null = null;
 
+  private getWsUrl(cameraId: string) {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host; 
+    return `${protocol}//${host}/api/v1/ws/${cameraId}`;
+  }
+
+  connect(cameraId: string) {
+    if (this.socket?.readyState === WebSocket.OPEN && this.currentCameraId === cameraId) {
+      return;
+    }
+
+    this.disconnect();
+    this.currentCameraId = cameraId;
     
+    const wsUrl = this.getWsUrl(cameraId);
+    this.socket = new WebSocket(wsUrl);
 
-  connect(cameraId: string): void {
-
-    if (this.wsConnection) {
-      this.disconnect();
-    }
-
-        const fullWsUrl = `${this.wsBaseUrl}${cameraId}`;
-        console.log(`[AnalysisService] Conectando a ${fullWsUrl}`);
-        this.wsConnection = new WebSocket(fullWsUrl);
-  }
-
-  disconnect(): void {
-    if (this.wsConnection) {
-       console.log(`[AnalysisService] Desconectando...`); 
-      this.wsConnection.close();
-      this.wsConnection = null;
-    }
-  }
-
-  onMessage(callback: (data: AnalysisData) => void): void {
-    if (this.wsConnection) {
-      this.wsConnection.onmessage = (event) => {
-        try{
-        const data = JSON.parse(event.data);
-        callback(data);
-      } catch (e) {
-        console.error('[AnalysisService] Erro ao processar mensagem JSON:', e)
-    }
-  };
-
-    this.wsConnection.onerror = (event) => {
-                console.error('[AnalysisService] Erro no WebSocket:', event);
+    this.socket.onmessage = (event) => {
+      try {
+        const data: AnalysisData = JSON.parse(event.data);
+        this.callbacks.forEach(cb => cb(data));
+      } catch (error) {}
     };
+
+    this.socket.onclose = () => {
+      this.socket = null;
+      this.reconnectTimer = setTimeout(() => {
+        if (this.currentCameraId) this.connect(this.currentCameraId);
+      }, 2000);
+    };
+  }
+
+  disconnect() {
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    if (this.socket) {
+      this.socket.onclose = null;
+      this.socket.close();
+      this.socket = null;
     }
+    this.currentCameraId = null;
+  }
+
+  onMessage(callback: MessageCallback) {
+    this.callbacks.push(callback);
+  }
+
+  removeListener(callback: MessageCallback) {
+    this.callbacks = this.callbacks.filter(cb => cb !== callback);
   }
 }
 

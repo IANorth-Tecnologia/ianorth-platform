@@ -1,13 +1,12 @@
-
-
 import React, { useState } from 'react';
-
 import { ThemeToggle } from '../components/ThemeProvider';
 import { AnalysisPanel } from '../components/AnalysisPanel';
 import { VideoFeed } from '../components/VideoFeed';
 import { CameraSelector } from '../components/CameraSelector';
 import HistoricoLotes from '../components/historico/HistoricoLotes';
+import { ConfigurationModal } from '../components/ConfigurationModal';
 import { FiSettings } from 'react-icons/fi';
+
 
 const API_BASE_URL = '/api/v1';
 
@@ -66,6 +65,11 @@ export const DashboardPage: React.FC = () => {
       <footer className="text-center mt-8 text-gray-500 dark:text-text-tertiary text-sm">
         <p>© 2025 Desenvolvido por IANorth Tecnologia.</p>
       </footer>
+
+       <ConfigurationModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />     
     </div>
   );
 };
