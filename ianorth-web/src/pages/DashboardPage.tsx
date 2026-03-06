@@ -7,17 +7,14 @@ import { AnalysisPanel } from '../components/AnalysisPanel';
 import { VideoFeed } from '../components/VideoFeed';
 import { CameraSelector } from '../components/CameraSelector';
 import HistoricoLotes from '../components/historico/HistoricoLotes';
+import { FiSettings } from 'react-icons/fi';
 
 const API_BASE_URL = '/api/v1';
 
 export const DashboardPage: React.FC = () => {
   const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);  
 
- /* // Mock mapping camera id -> stream URL (a ser substituído pelo streaming real)
-  const videoStreams: Record<string, string> = {
-    'cam_patio_1': '/stream1.gif', // Usando o ID real da sua API
-  };
-*/
     const streamUrl = selectedCameraId 
     ? `${API_BASE_URL}/video_feed/${selectedCameraId}` 
     : undefined;
@@ -35,14 +32,23 @@ export const DashboardPage: React.FC = () => {
             <p className="text-sm text-gray-600 dark:text-text-secondary">Dashboard de Análise de Vergalhões</p>
           </div>
         </div>
+
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="p-2 rounded-lg bg-gray-100 dark:bg-background-secondary text-gray-600 dark:text-text-secondary hover:text-gray-900 dark:hover:text-text-primary hover:bg-gray-200 dark:hover:bg-background-tertiary transition-colors duration-200 border border-gray-200 dark:border-background-tertiary"
+            title="Configurar Máquina"
+          >
+            <FiSettings className="w-5 h-5" />
+          </button>
         
         <ThemeToggle />
+        </div>
       </header>
 
       <main>
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-3 space-y-4 min-h-[60vh]">
-            {/* O CameraSelector agora usa `null` e uma função de callback mais simples */}
             <CameraSelector
               activeCameraId={selectedCameraId} 
               onSelectCamera={(id) => setSelectedCameraId(id)}
@@ -58,7 +64,7 @@ export const DashboardPage: React.FC = () => {
       </main>
 
       <footer className="text-center mt-8 text-gray-500 dark:text-text-tertiary text-sm">
-        <p>© 2025 IANorth Tecnologia. Todos os direitos reservados.</p>
+        <p>© 2025 Desenvolvido por IANorth Tecnologia.</p>
       </footer>
     </div>
   );

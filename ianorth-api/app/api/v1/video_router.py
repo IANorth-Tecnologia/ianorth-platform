@@ -1,35 +1,20 @@
-import asyncio
 from fastapi import APIRouter
-from starlette.responses import StreamingResponse
-import redis.asyncio as redis
-from app.core.config import settings
+from fastapi.responses import StreamingResponse
+import asyncio
+from app.core.inference_service import inference_engine
+
 
 router = APIRouter()
 
 async def get_video_frames(camera_id: str):
-    """
-    Um gerador assíncrono que busca frames do Redis e os formata para um stream MJPEG.
-    """
-    r = redis.from_url(f"redis://{settings.REDIS_HOST}")
-    redis_channel = f"video_feed:{camera_id}"
-    
+
     while True:
-        try:
-            frame_bytes = await r.get(redis_channel)
+        frame = inference_engine.latest_frame
+        if frame is not None:
+            yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
             
-            if frame_bytes:
-                # Formata a resposta para o padrão MJPEG
-                yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-            
-            # Controla a taxa de quadros (FPS) para não sobrecarregar
-            await asyncio.sleep(1 / 30)  # Aproximadamente 30 FPS
-        except asyncio.CancelledError:
-            print(f"Streaming para {camera_id} cancelado.")
-            break
-        except Exception as e:
-            print(f"Erro no streaming de vídeo para {camera_id}: {e}")
-            await asyncio.sleep(1)
+            await asyncio.sleep(1 / 30)  
 
 
 @router.get("/video_feed/{camera_id}")

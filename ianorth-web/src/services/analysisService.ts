@@ -8,7 +8,10 @@ export interface AnalysisData {
   status: 'Em Andamento' | 'Concluído' | 'Aguardando';
 }
 
-class AnalysisService { // Gerencia a conexão WebSocket e simulação de dados
+class AnalysisService {
+  removeListener(handleNewData: (newData: AnalysisData) => void) {
+      throw new Error('Method not implemented.');
+  } // Gerencia a conexão WebSocket e simulação de dados
   private wsConnection: WebSocket | null = null;
   private readonly wsBaseUrl = `ws://${window.location.host}/ws/`;
 

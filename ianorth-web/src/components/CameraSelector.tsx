@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import type { Camera } from '../services/cameraService';
-import { getCameras } from '../services/cameraService';
+import React, { useEffect } from 'react';
+import { FiCamera } from 'react-icons/fi';
 
 interface CameraSelectorProps {
   activeCameraId?: string | null;
@@ -8,34 +7,32 @@ interface CameraSelectorProps {
 }
 
 export const CameraSelector: React.FC<CameraSelectorProps> = ({ activeCameraId, onSelectCamera }) => {
-  const [cameras, setCameras] = useState<Camera[]>([]);
-  const [loading, setLoading] = useState(false);
+  const LOCAL_CAMERA_ID = 'local';
 
   useEffect(() => {
-    setLoading(true);
-    getCameras()
-      .then(list => setCameras(list))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <div>Carregando câmeras...</div>;
+    if (activeCameraId !== LOCAL_CAMERA_ID) {
+      onSelectCamera(LOCAL_CAMERA_ID);
+    }
+  }, [activeCameraId, onSelectCamera]);
 
   return (
-    <div className="bg-white/70 dark:bg-background-secondary/70 p-4 rounded-lg border border-gray-200 dark:border-background-tertiary">
-      <h3 className="text-sm font-semibold mb-3">Selecione a Câmera</h3>
-      <div className="flex gap-2 flex-wrap">
-        {cameras.map((camera) => {
-            const isSelected = camera.id === activeCameraId;
-
-            return (
-            <button
-              key={camera.id}
-              onClick={() => onSelectCamera(camera.id)}
-              className={`px-3 py-2 rounded-md text-sm border transition-colors duration-150 ${isSelected ? 'bg-accent-primary text-white border-accent-primary' : 'bg-white dark:bg-background-primary text-gray-700 dark:text-text-primary border-gray-200 dark:border-background-tertiary'}`}>
-              {camera.name}
-            </button>
-                    );
-                })}
+    <div className="bg-white/70 dark:bg-background-secondary/70 p-4 rounded-lg border border-gray-200 dark:border-background-tertiary flex items-center justify-between">
+      <div className="flex items-center space-x-3">
+        <div className="p-2 bg-accent-primary/10 text-accent-primary rounded-lg">
+          <FiCamera className="w-5 h-5" />
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-text-primary">Monitoramento Local</h3>
+          <p className="text-xs text-gray-500 dark:text-text-tertiary">Processamento de Borda (Edge AI)</p>
+        </div>
+      </div>
+      
+      <div className="flex items-center space-x-2 bg-status-success/10 px-3 py-1 rounded-full border border-status-success/20">
+        <span className="relative flex h-2.5 w-2.5">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-status-success opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-status-success"></span>
+        </span>
+        <span className="text-sm font-medium text-status-success">Ativo</span>
       </div>
     </div>
   );
