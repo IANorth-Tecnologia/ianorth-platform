@@ -11,9 +11,9 @@ interface ConfigurationModalProps {
 
 export const ConfigurationModal: React.FC<ConfigurationModalProps> = ({ isOpen, onClose }) => {
   const [cameraType, setCameraType] = useState<'ip' | 'usb'>('ip');
-  const [ip, setIp] = useState('');
+  const [ip, setIp] = useState('10.6.58.207');
   const [user, setUser] = useState('admin');
-  const [pass, setPass] = useState('');
+  const [pass, setPass] = useState('eletricasnb2021');
   const [usbIndex, setUsbIndex] = useState('0');
 
   const [modelPath, setModelPath] = useState('/app/models/ver37.pt');
@@ -130,7 +130,7 @@ export const ConfigurationModal: React.FC<ConfigurationModalProps> = ({ isOpen, 
                 <div className="space-y-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 mb-1">ENDEREÇO IP</label>
-                    <input type="text" required value={ip} onChange={(e) => setIp(e.target.value)} className="w-full px-3 py-2 bg-gray-50 dark:bg-background-primary border border-gray-300 dark:border-background-tertiary rounded-lg outline-none focus:ring-2 focus:ring-accent-primary" placeholder="192.168.1.100" />
+                    <input type="text" required value={ip} onChange={(e) => setIp(e.target.value)} className="w-full px-3 py-2 bg-gray-50 dark:bg-background-primary border border-gray-300 dark:border-background-tertiary rounded-lg outline-none focus:ring-2 focus:ring-accent-primary" placeholder="10.6.58.207" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
