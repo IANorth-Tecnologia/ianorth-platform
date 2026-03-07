@@ -1,9 +1,11 @@
+import os
+os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp"
+
 from os.path import isfile
 import cv2
 import threading
 import time
 import json
-import os
 
 from ultralytics import YOLO
 from app.core.database import SessionLocal
@@ -13,12 +15,13 @@ CONFIG_FILE = "edge_config.json"
 UPLOADS_DIR = "/app/uploads"
 MODELO_IA = "/app/models/ver37.pt" 
 COUNT = 170 
+CAMERA_PADRAO = "rtsp://admin:eletricasnb2021@10.6.58.207:554/cam/realmonitor?channel=1&subtype=0"
 
 class EdgeInferenceEngine:
     def __init__(self):
         self.running = False
         self.thread = None
-        self.camera_source = "0"
+        self.camera_source = CAMERA_PADRAO
         self.model_path = MODELO_IA         
         self.target_count = COUNT 
         self.latest_frame = None
@@ -30,12 +33,15 @@ class EdgeInferenceEngine:
 
     def load_config(self):
         if os.path.exists(CONFIG_FILE):
-            with open(CONFIG_FILE, "r") as f:
-                config = json.load(f)
-                self.camera_source = config.get("camera_source", 0)
-                self.model_path = config.get("model_path", MODELO_IA)
-                self.target_count = config.get("target_count", COUNT)
-            print(f"[IA] Configuração: Câmera={self.camera_source} | Modelo={self.model_path} | Target={self.target_count}")
+            try:
+                with open(CONFIG_FILE, "r") as f:
+                    config = json.load(f)
+                    self.camera_source = config.get("camera_source", CAMERA_PADRAO)
+                    self.model_path = config.get("model_path", MODELO_IA)
+                    self.target_count = config.get("target_count", COUNT)
+            except Exception:
+                pass
+        print(f"[IA] Configuração: Câmera={self.camera_source} | Target={self.target_count}")
 
     def save_config(self, camera_source, model_path, target_count=COUNT):
         config = {
@@ -73,13 +79,13 @@ class EdgeInferenceEngine:
                 to_delete = files[:len(files) - max_files]
                 for f in to_delete:
                     os.remove(f)
-        except Exception as e:
-            print(f"[CLEANUP] Erro: {e}")       
+        except Exception:
+            pass       
 
     def _run_inference_loop(self):
         os.makedirs(UPLOADS_DIR, exist_ok=True)
 
-        source = int(self.camera_source) if self.camera_source.isdigit() else self.camera_source
+        source = int(self.camera_source) if str(self.camera_source).isdigit() else self.camera_source
         is_video_file = isinstance(source, str) and not source.startswith("rtsp://")
 
         W, H = (600, 800) if is_video_file else (800, 600)
@@ -115,23 +121,18 @@ class EdgeInferenceEngine:
             if is_video_file:
                 im0 = cv2.rotate(im0, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
-            # --- INFERÊNCIA LIMPA E DIRETA ---
-            # Removemos o rastreador. Apenas detectamos o que está na tela.
             results = model.predict(im0, verbose=False)
             current_count = len(results[0].boxes) if results else 0
-            
-            # Pinta as caixas na imagem para aparecer na interface
             im0 = results[0].plot()
 
-            
             if cooldown_active:
                 if current_count == 0:
                     print("--- [IA] Fardo removido (0 peças detectadas). Liberando para o próximo lote! ---")
                     cooldown_active = False
-            
+
             elif not cooldown_active and current_count >= self.target_count:
                 if not active_lote:
-                     active_lote = lote_crud.create_lote(db, camera_id="local")
+                    active_lote = lote_crud.create_lote(db, camera_id="local")
                      
                 print(f"--- [IA] Meta atingida ({current_count}/{self.target_count}). Fechando Lote! ---")
                 image_filename = f"lote_{active_lote.id}.jpg"
@@ -157,12 +158,17 @@ class EdgeInferenceEngine:
                 active_lote = lote_crud.create_lote(db, camera_id="local")
 
             if active_lote:
-                status, lote_id = "Em Andamento", active_lote.id
+                status = "Em Andamento"
+                lote_id = active_lote.id
                 progress = min(100, (current_count / self.target_count) * 100)
             elif cooldown_active:
-                status, lote_id, progress = "Cooldown", None, 0 
+                status = "Cooldown"
+                lote_id = None
+                progress = 0 
             else:
-                status, lote_id, progress = "Aguardando", None, 0 
+                status = "Aguardando"
+                lote_id = None
+                progress = 0 
 
             self.latest_stats = {
                 "cameraId": "local", "loteId": lote_id, "currentCount": current_count,
