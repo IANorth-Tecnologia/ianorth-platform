@@ -4,17 +4,15 @@ import threading
 import time
 import json
 import os
-import torch 
 
 from ultralytics import YOLO
-from ultralytics.solutions import ObjectCounter
 from app.core.database import SessionLocal
 from app.crud import lote_crud
 
 CONFIG_FILE = "edge_config.json"
 UPLOADS_DIR = "/app/uploads"
-MODELO_IA = "/app/models/ver37.pt" #path do Modelo, mudar aqui
-COUNT = 50 #adiciona limite alvo
+MODELO_IA = "/app/models/ver37.pt" 
+COUNT = 170 
 
 class EdgeInferenceEngine:
     def __init__(self):
@@ -28,7 +26,6 @@ class EdgeInferenceEngine:
             "cameraId": "local", "loteId": None, "currentCount": 0,
             "targetCount": self.target_count, "progress": 0, "status": "Aguardando"
         }
-
         self.load_config()
 
     def load_config(self):
@@ -38,7 +35,7 @@ class EdgeInferenceEngine:
                 self.camera_source = config.get("camera_source", 0)
                 self.model_path = config.get("model_path", MODELO_IA)
                 self.target_count = config.get("target_count", COUNT)
-            print(f"[IA] Configuração: Câmera={self.camera_source} | Modelo={self.model_path}")
+            print(f"[IA] Configuração: Câmera={self.camera_source} | Modelo={self.model_path} | Target={self.target_count}")
 
     def save_config(self, camera_source, model_path, target_count=COUNT):
         config = {
@@ -59,7 +56,6 @@ class EdgeInferenceEngine:
     def start(self):
         if not self.running:
             self.running = True
-            #Inicia a leitura do video 
             self.thread = threading.Thread(target=self._run_inference_loop, daemon=True)
             self.thread.start()
 
@@ -67,7 +63,6 @@ class EdgeInferenceEngine:
         self.running = False
         if self.thread:
             self.thread.join()
-
 
     def _cleanup_uploads(self, max_files=100):
         try:
@@ -82,23 +77,15 @@ class EdgeInferenceEngine:
             print(f"[CLEANUP] Erro: {e}")       
 
     def _run_inference_loop(self):
-        """
-            A Logica de contagem Unificada...
-        """
         os.makedirs(UPLOADS_DIR, exist_ok=True)
 
         source = int(self.camera_source) if self.camera_source.isdigit() else self.camera_source
         is_video_file = isinstance(source, str) and not source.startswith("rtsp://")
 
         W, H = (600, 800) if is_video_file else (800, 600)
-        region_points = [(0, 0), (0, 600), (800, 600), (800, 0)]
 
         try:
             model = YOLO(self.model_path)
-            counter = ObjectCounter(model=self.model_path)
-            counter.reg_pts = region_points
-            counter.names = model.names
-            counter.draw_tracks = False
         except Exception as e:
             print(f"--- Erro ao carregar modelo: {e} ---")
             self.running = False
@@ -119,24 +106,34 @@ class EdgeInferenceEngine:
             success, frame = cap.read()
             if not success:
                 if is_video_file:
-                    cap.set(cv2.CAP_PROP_POS_FRAMES, 0) #loop no video de test 
+                    cap.set(cv2.CAP_PROP_POS_FRAMES, 0) 
                 else:
                     time.sleep(1)
                 continue
 
             im0 = cv2.resize(frame, (W, H))
             if is_video_file:
-                im0 = cv2.rotate(im0, cv2.ROTATE_90_COUNTERCLOKWISE)
+                im0 = cv2.rotate(im0, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
-            #inferencia 
-            results = model.track(im0, persist=True, show=False, verbose=False, show_labels=False)
-            current_count = counter(im0)
+            # --- INFERÊNCIA LIMPA E DIRETA ---
+            # Removemos o rastreador. Apenas detectamos o que está na tela.
+            results = model.predict(im0, verbose=False)
+            current_count = len(results[0].boxes) if results else 0
+            
+            # Pinta as caixas na imagem para aparecer na interface
+            im0 = results[0].plot()
 
-            #Banco de dados e Lotes 
-            if cooldown_active and current_count == 0:
-                cooldown_active = False
-
-            elif active_lote and current_count >= self.target_count:
+            
+            if cooldown_active:
+                if current_count == 0:
+                    print("--- [IA] Fardo removido (0 peças detectadas). Liberando para o próximo lote! ---")
+                    cooldown_active = False
+            
+            elif not cooldown_active and current_count >= self.target_count:
+                if not active_lote:
+                     active_lote = lote_crud.create_lote(db, camera_id="local")
+                     
+                print(f"--- [IA] Meta atingida ({current_count}/{self.target_count}). Fechando Lote! ---")
                 image_filename = f"lote_{active_lote.id}.jpg"
                 image_save_path = os.path.join(UPLOADS_DIR, image_filename)
                 cv2.imwrite(image_save_path, im0)
@@ -154,19 +151,11 @@ class EdgeInferenceEngine:
 
                 active_lote = None
                 cooldown_active = True
-                
-                # reinicia o contador para o próximo lote
-                counter = ObjectCounter(model=self.model_path)
-                counter.reg_pts = region_points
-                counter.names = model.names
-                counter.draw_tracks = False
                 continue
-
 
             elif not active_lote and not cooldown_active and current_count > 0:
                 active_lote = lote_crud.create_lote(db, camera_id="local")
 
-            # Atualiza status 
             if active_lote:
                 status, lote_id = "Em Andamento", active_lote.id
                 progress = min(100, (current_count / self.target_count) * 100)
@@ -180,7 +169,6 @@ class EdgeInferenceEngine:
                 "targetCount": self.target_count, "progress": round(progress, 2), "status": status
             }
 
-            # Salva o frame processado na memória
             ret, buffer = cv2.imencode('.jpg', im0)
             if ret:
                 self.latest_frame = buffer.tobytes()
@@ -189,6 +177,5 @@ class EdgeInferenceEngine:
 
         cap.release()
         db.close()
-
 
 inference_engine = EdgeInferenceEngine()

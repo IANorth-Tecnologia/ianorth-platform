@@ -1,6 +1,4 @@
-#refatorar o compose, serviço unificados 
 services:
-#API + INferencia + Banco SQLite tudo num lugar só
   core_system:
     build:  
       context: ./ianorth-api
@@ -8,13 +6,13 @@ services:
     container_name: ianorth_backend 
     env_file:
       - ./ianorth-api/.env
+    environment:
+      - OPENCV_FFMPEG_CAPTURE_OPTIONS=rtsp_transport;tcp
     ports:
       - "8036:8898"
     volumes:
       - ./ianorth-api/uploads:/app/uploads
       - ./ianorth-api/models:/app/models
-      # a linha abaixo garante que o arquivo SQLite fique salvo na máquina host
-      # e não se perca se você desligar o container!
       - ./banco_local:/app/data
     restart: unless-stopped
     deploy:
