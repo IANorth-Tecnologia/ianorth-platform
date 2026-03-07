@@ -23,7 +23,7 @@ export const CameraSelector: React.FC<CameraSelectorProps> = ({ activeCameraId, 
         </div>
         <div>
           <h3 className="text-sm font-semibold text-gray-900 dark:text-text-primary">Monitoramento Local</h3>
-          <p className="text-xs text-gray-500 dark:text-text-tertiary">Processamento de Borda (Edge AI)</p>
+          <p className="text-xs text-gray-500 dark:text-text-tertiary">Processamento de Borda </p>
         </div>
       </div>
       
