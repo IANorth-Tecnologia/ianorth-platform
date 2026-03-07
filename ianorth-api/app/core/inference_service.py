@@ -117,7 +117,7 @@ class EdgeInferenceEngine:
                 continue
 
             success, frame = cap.read()
-            if not succes:
+            if not success:
                 if is_video_file:
                     cap.set(cv2.CAP_PROP_POS_FRAMES, 0) #loop no video de test 
                 else:
@@ -126,7 +126,7 @@ class EdgeInferenceEngine:
 
             im0 = cv2.resize(frame, (W, H))
             if is_video_file:
-                im0 cv2.rotate(im0, cv2.ROTATE_90_COUNTERCLOKWISE)
+                im0 = cv2.rotate(im0, cv2.ROTATE_90_COUNTERCLOKWISE)
 
             #inferencia 
             results = model.track(im0, persist=True, show=False, verbose=False, show_labels=False)
