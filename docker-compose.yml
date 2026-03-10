@@ -24,7 +24,7 @@ services:
     build:
       context: ./ianorth-web
       dockerfile: Dockerfile
-    container_name: ianorth-frontend
+    container_name: ianorth-web
     ports:
      - "8026:80"
     depends_on:
