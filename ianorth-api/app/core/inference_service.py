@@ -13,17 +13,15 @@ from app.crud import lote_crud
 
 CONFIG_FILE = "edge_config.json"
 UPLOADS_DIR = "/app/uploads"
-MODELO_IA = "/app/models/ver37.pt" 
-COUNT = 170 
-CAMERA_PADRAO = "rtsp://admin:eletricasnb2021@10.6.58.207:554/cam/realmonitor?channel=1&subtype=0"
+
 
 class EdgeInferenceEngine:
     def __init__(self):
         self.running = False
         self.thread = None
-        self.camera_source = CAMERA_PADRAO
-        self.model_path = MODELO_IA         
-        self.target_count = COUNT 
+        self.camera_source = None
+        self.model_path = None        
+        self.target_count = 0 
         self.latest_frame = None
         self.latest_stats = {
             "cameraId": "local", "loteId": None, "currentCount": 0,
@@ -36,14 +34,14 @@ class EdgeInferenceEngine:
             try:
                 with open(CONFIG_FILE, "r") as f:
                     config = json.load(f)
-                    self.camera_source = config.get("camera_source", CAMERA_PADRAO)
-                    self.model_path = config.get("model_path", MODELO_IA)
-                    self.target_count = config.get("target_count", COUNT)
+                    self.camera_source = config.get("camera_source")
+                    self.model_path = config.get("model_path")
+                    self.target_count = config.get("target_count", 0)
             except Exception:
                 pass
         print(f"[IA] Configuração: Câmera={self.camera_source} | Target={self.target_count}")
 
-    def save_config(self, camera_source, model_path, target_count=COUNT):
+    def save_config(self, camera_source, model_path, target_count):
         config = {
             "camera_source": camera_source, 
             "model_path": model_path,
@@ -85,7 +83,14 @@ class EdgeInferenceEngine:
     def _run_inference_loop(self):
         os.makedirs(UPLOADS_DIR, exist_ok=True)
 
-        source = int(self.camera_source) if str(self.camera_source).isdigit() else self.camera_source
+        while self.running and (not self.camera_source or not self.model_path):
+                print("--- [IA] Aguardando configuração via Frontend... ---")
+                time.sleep(5)
+        if not self.running:
+            return
+        
+        cam_str = str(self.camera_source)
+        source = int(cam_str) if str(self.camera_source).isdigit() else self.camera_source
         is_video_file = isinstance(source, str) and not source.startswith("rtsp://")
 
         W, H = (600, 800) if is_video_file else (800, 600)
@@ -121,9 +126,16 @@ class EdgeInferenceEngine:
             if is_video_file:
                 im0 = cv2.rotate(im0, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
-            results = model.predict(im0, verbose=False)
+            results = model.predict(
+                im0,
+                conf=0.20,       # Ignora detecções abaixo de tantos% de certeza
+                 iou=0.5,         # Limpa caixas sobrepostas
+                classes=[0],     # Foca só na classe
+                verbose=False    # Mantém o terminal limpo
+            )
             current_count = len(results[0].boxes) if results else 0
-            im0 = results[0].plot()
+            # [ALexon] muda visão do box no plot 
+            im0 = results[0].plot(labels=False, conf=False, line_width=1)
 
             if cooldown_active:
                 if current_count == 0:
