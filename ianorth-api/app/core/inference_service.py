@@ -1,12 +1,11 @@
 import os
 os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp"
 
-from os.path import isfile
 import cv2
 import threading
 import time
 import json
-
+from os.path import isfile
 from ultralytics import YOLO
 from app.core.database import SessionLocal
 from app.crud import lote_crud
@@ -21,7 +20,7 @@ class EdgeInferenceEngine:
         self.thread = None
         self.camera_source = None
         self.model_path = None        
-        self.target_count = 0 
+        self.target_count = 0  
         self.latest_frame = None
         self.latest_stats = {
             "cameraId": "local", "loteId": None, "currentCount": 0,
@@ -65,8 +64,8 @@ class EdgeInferenceEngine:
 
     def stop(self):
         self.running = False
-        if self.thread:
-            self.thread.join()
+        if self.thread and self.thread.is_alive():
+            self.thread.join(timeout=2.0)
 
     def _cleanup_uploads(self, max_files=100):
         try:
@@ -84,13 +83,16 @@ class EdgeInferenceEngine:
         os.makedirs(UPLOADS_DIR, exist_ok=True)
 
         while self.running and (not self.camera_source or not self.model_path):
-                print("--- [IA] Aguardando configuração via Frontend... ---")
-                time.sleep(5)
+            print("--- [IA] Aguardando configuração via Frontend... ---")
+            black_frame = cv2.imencode('.jpg', cv2.Mat.zeros((600, 800, 3), cv2.CV_8U))[1]
+            self.latest_frame = black_frame.tobytes()
+            time.sleep(2)
+                
         if not self.running:
             return
-        
+
         cam_str = str(self.camera_source)
-        source = int(cam_str) if str(self.camera_source).isdigit() else self.camera_source
+        source = int(cam_str) if cam_str.isdigit() else cam_str
         is_video_file = isinstance(source, str) and not source.startswith("rtsp://")
 
         W, H = (600, 800) if is_video_file else (800, 600)
@@ -128,13 +130,13 @@ class EdgeInferenceEngine:
 
             results = model.predict(
                 im0,
-                conf=0.20,       # Ignora detecções abaixo de tantos% de certeza
-                 iou=0.5,         # Limpa caixas sobrepostas
-                classes=[0],     # Foca só na classe
-                verbose=False    # Mantém o terminal limpo
+                conf=0.20,       
+                iou=0.5,         
+                classes=[0],     
+                verbose=False    
             )
             current_count = len(results[0].boxes) if results else 0
-            # [ALexon] muda visão do box no plot 
+            
             im0 = results[0].plot(labels=False, conf=False, line_width=1)
 
             if cooldown_active:
@@ -172,7 +174,10 @@ class EdgeInferenceEngine:
             if active_lote:
                 status = "Em Andamento"
                 lote_id = active_lote.id
-                progress = min(100, (current_count / self.target_count) * 100)
+                if self.target_count and self.target_count > 0:
+                    progress = min(100, (current_count / self.target_count) * 100)
+                else:
+                    progress = 0
             elif cooldown_active:
                 status = "Cooldown"
                 lote_id = None
@@ -193,7 +198,8 @@ class EdgeInferenceEngine:
 
             time.sleep(0.03)
 
-        cap.release()
+        if cap:
+            cap.release()
         db.close()
 
 inference_engine = EdgeInferenceEngine()
