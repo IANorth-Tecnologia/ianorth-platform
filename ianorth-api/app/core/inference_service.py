@@ -1,11 +1,13 @@
 import os
 os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp"
 
+from os.path import isfile
 import cv2
 import threading
 import time
 import json
-from os.path import isfile
+import numpy as np
+
 from ultralytics import YOLO
 from app.core.database import SessionLocal
 from app.crud import lote_crud
@@ -20,8 +22,13 @@ class EdgeInferenceEngine:
         self.thread = None
         self.camera_source = None
         self.model_path = None        
-        self.target_count = 0  
-        self.latest_frame = None
+        self.target_count = 0 
+        
+        black_img = np.zeros((600, 800, 3), dtype=np.uint8)
+        cv2.putText(black_img, "Aguardando Configuracao...", (150, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+        _, buffer = cv2.imencode('.jpg', black_img)
+        self.latest_frame = buffer.tobytes()
+
         self.latest_stats = {
             "cameraId": "local", "loteId": None, "currentCount": 0,
             "targetCount": self.target_count, "progress": 0, "status": "Aguardando"
@@ -82,11 +89,10 @@ class EdgeInferenceEngine:
     def _run_inference_loop(self):
         os.makedirs(UPLOADS_DIR, exist_ok=True)
 
+        # MODO DE ESPERA LEVE:
         while self.running and (not self.camera_source or not self.model_path):
             print("--- [IA] Aguardando configuração via Frontend... ---")
-            black_frame = cv2.imencode('.jpg', cv2.Mat.zeros((600, 800, 3), cv2.CV_8U))[1]
-            self.latest_frame = black_frame.tobytes()
-            time.sleep(2)
+            time.sleep(3)
                 
         if not self.running:
             return
@@ -137,6 +143,7 @@ class EdgeInferenceEngine:
             )
             current_count = len(results[0].boxes) if results else 0
             
+            # [ALexon] muda visão do box no plot 
             im0 = results[0].plot(labels=False, conf=False, line_width=1)
 
             if cooldown_active:
