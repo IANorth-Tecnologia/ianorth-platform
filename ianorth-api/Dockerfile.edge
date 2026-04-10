@@ -1,25 +1,25 @@
-FROM python:3.9-slim
+FROM python:3.9-slim-bullseye
 
 WORKDIR /app
 
+# Instalar dependências e o driver ODBC 17 com assinatura explícita (Segurança Debian)
 RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg2 \
+    apt-transport-https \
+    unixodbc-dev \
     libgl1 \
     libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
+    && curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg \
+    && echo "deb [arch=amd64,armhf,arm64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/debian/11/prod bullseye main" > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql17 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Se for usar Ultralytics (YOLO), 
-# RUN pip install ultralytics
-
 COPY . .
 
-# porta do FastAPI
 EXPOSE 8898
-
-# Comando para iniciar o nosso sistema unificado
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8898"]

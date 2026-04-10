@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import text
 
 from app.core.config import settings
 from app.core.database import engine
@@ -10,9 +11,25 @@ from app.api.v1 import websocket_gateway, lotes_router, video_router, config_rou
 from app.core.inference_service import inference_engine
 
 def create_db_and_tables():
-    print("--- Verificando e criando tabelas do banco de dados SQLite local ---")
-    lote_model.Base.metadata.create_all(bind=engine)
-    print("--- Banco pronto para uso ---")
+    print("--- Tentando conectar ao banco de dados e criar tabelas... ---")
+    try:
+        # Tenta conectar e executar uma consulta simples de teste
+        with engine.connect() as connection:
+            result = connection.execute(text("SELECT @@VERSION"))
+            for row in result:
+                print(f"--- Conectado com Sucesso ao SQL Server: {row[0]} ---")
+        
+        # Cria as tabelas
+        lote_model.Base.metadata.create_all(bind=engine)
+        print("--- Tabelas do banco de dados verificadas/criadas com sucesso ---")
+        
+    except Exception as e:
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print(f"ERRO CRÍTICO AO CONECTAR NO BANCO DE DADOS:")
+        print(str(e))
+        print("O sistema continuará rodando em memória, mas não salvará os dados!")
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -30,7 +47,6 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-app.mount("/uploads", StaticFiles(directory="/app/uploads"), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,

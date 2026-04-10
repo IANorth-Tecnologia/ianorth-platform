@@ -1,12 +1,12 @@
 import os
-os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp"
+os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp|fflags;nobuffer|flags;low_delay"
 
-from os.path import isfile
 import cv2
 import threading
 import time
 import json
 import numpy as np
+import base64
 
 from ultralytics import YOLO
 from app.core.database import SessionLocal
@@ -14,6 +14,34 @@ from app.crud import lote_crud
 
 CONFIG_FILE = "edge_config.json"
 UPLOADS_DIR = "/app/uploads"
+
+class RTSPCameraStream:
+    def __init__(self, src):
+        self.src = src
+        self.stream = cv2.VideoCapture(src)
+        self.stream.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        self.grabbed, self.frame = self.stream.read()
+        self.stopped = False
+        self.thread = threading.Thread(target=self.update, daemon=True)
+        self.thread.start()
+
+    def update(self):
+        while not self.stopped:
+            if not self.stream.isOpened():
+                time.sleep(1)
+                self.stream = cv2.VideoCapture(self.src)
+                self.stream.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+                continue
+            self.grabbed, self.frame = self.stream.read()
+
+    def read(self):
+        return self.grabbed, self.frame
+
+    def stop(self):
+        self.stopped = True
+        if self.thread.is_alive():
+            self.thread.join(timeout=1)
+        self.stream.release()
 
 
 class EdgeInferenceEngine:
@@ -31,7 +59,7 @@ class EdgeInferenceEngine:
 
         self.latest_stats = {
             "cameraId": "local", "loteId": None, "currentCount": 0,
-            "targetCount": self.target_count, "progress": 0, "status": "Aguardando"
+            "targetCount": self.target_count, "progress": 0.0, "status": "Aguardando"
         }
         self.load_config()
 
@@ -42,16 +70,17 @@ class EdgeInferenceEngine:
                     config = json.load(f)
                     self.camera_source = config.get("camera_source")
                     self.model_path = config.get("model_path")
-                    self.target_count = config.get("target_count", 0)
+                    # Proteção: Força a conversão para inteiro
+                    self.target_count = int(config.get("target_count", 0))
             except Exception:
                 pass
-        print(f"[IA] Configuração: Câmera={self.camera_source} | Target={self.target_count}")
+        print(f"[IA] Configuração: Câmara={self.camera_source} | Target={self.target_count}")
 
     def save_config(self, camera_source, model_path, target_count):
         config = {
             "camera_source": camera_source, 
             "model_path": model_path,
-            "target_count": target_count
+            "target_count": int(target_count) # Proteção
         }
         with open(CONFIG_FILE, "w") as f:
             json.dump(config, f)
@@ -89,7 +118,6 @@ class EdgeInferenceEngine:
     def _run_inference_loop(self):
         os.makedirs(UPLOADS_DIR, exist_ok=True)
 
-        # MODO DE ESPERA LEVE:
         while self.running and (not self.camera_source or not self.model_path):
             print("--- [IA] Aguardando configuração via Frontend... ---")
             time.sleep(3)
@@ -114,41 +142,37 @@ class EdgeInferenceEngine:
         active_lote = None
         cooldown_active = False
 
-        cap = cv2.VideoCapture(source)
+        if not is_video_file:
+            cap = RTSPCameraStream(source)
+        else:
+            cap = cv2.VideoCapture(source)
+            cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
         while self.running:
-            if not cap.isOpened():
-                time.sleep(2)
-                cap = cv2.VideoCapture(source)
-                continue
+            if not is_video_file:
+                success, frame = cap.read()
+            else:
+                success, frame = cap.read()
 
-            success, frame = cap.read()
-            if not success:
+            if not success or frame is None:
                 if is_video_file:
                     cap.set(cv2.CAP_PROP_POS_FRAMES, 0) 
                 else:
-                    time.sleep(1)
+                    time.sleep(0.5)
                 continue
 
             im0 = cv2.resize(frame, (W, H))
             if is_video_file:
                 im0 = cv2.rotate(im0, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
-            results = model.predict(
-                im0,
-                conf=0.20,       
-                iou=0.5,         
-                classes=[0],     
-                verbose=False    
-            )
+            results = model.predict(im0, conf=0.40, iou=0.5, classes=[0], verbose=False)
             current_count = len(results[0].boxes) if results else 0
             
-            # [ALexon] muda visão do box no plot 
             im0 = results[0].plot(labels=False, conf=False, line_width=1)
 
             if cooldown_active:
                 if current_count == 0:
-                    print("--- [IA] Fardo removido (0 peças detectadas). Liberando para o próximo lote! ---")
+                    print("--- [IA] Fardo removido (0 peças detetadas). Libertando para o próximo lote! ---")
                     cooldown_active = False
 
             elif not cooldown_active and current_count >= self.target_count:
@@ -156,19 +180,18 @@ class EdgeInferenceEngine:
                     active_lote = lote_crud.create_lote(db, camera_id="local")
                      
                 print(f"--- [IA] Meta atingida ({current_count}/{self.target_count}). Fechando Lote! ---")
-                image_filename = f"lote_{active_lote.id}.jpg"
-                image_save_path = os.path.join(UPLOADS_DIR, image_filename)
-                cv2.imwrite(image_save_path, im0)
-
-                self._cleanup_uploads(max_files=200)
+                ret_jpg, buffer_jpg = cv2.imencode('.jpg', im0)
+                image_b64_str = None
+                if ret_jpg:
+                    image_b64_str = base64.b64encode(buffer_jpg).decode('utf-8')
 
                 lote_crud.finalize_lote(
-                    db, lote_id=active_lote.id, final_count=current_count, image_path=image_filename
+                    db, lote_id=active_lote.id, final_count=current_count, image_base64=image_b64_str
                 )
 
                 self.latest_stats = {
                     "cameraId": "local", "loteId": active_lote.id, "currentCount": current_count,
-                    "targetCount": self.target_count, "progress": 100, "status": "Concluído"
+                    "targetCount": self.target_count, "progress": 100.0, "status": "Concluído"
                 }
 
                 active_lote = None
@@ -182,17 +205,17 @@ class EdgeInferenceEngine:
                 status = "Em Andamento"
                 lote_id = active_lote.id
                 if self.target_count and self.target_count > 0:
-                    progress = min(100, (current_count / self.target_count) * 100)
+                    progress = min(100.0, (current_count / self.target_count) * 100.0)
                 else:
-                    progress = 0
+                    progress = 0.0
             elif cooldown_active:
                 status = "Cooldown"
                 lote_id = None
-                progress = 0 
+                progress = 0.0 
             else:
                 status = "Aguardando"
                 lote_id = None
-                progress = 0 
+                progress = 0.0 
 
             self.latest_stats = {
                 "cameraId": "local", "loteId": lote_id, "currentCount": current_count,
@@ -203,10 +226,11 @@ class EdgeInferenceEngine:
             if ret:
                 self.latest_frame = buffer.tobytes()
 
-            time.sleep(0.03)
-
         if cap:
-            cap.release()
+            if not is_video_file:
+                cap.stop()
+            else:
+                cap.release()
         db.close()
 
 inference_engine = EdgeInferenceEngine()

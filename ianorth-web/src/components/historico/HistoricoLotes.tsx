@@ -1,9 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { getHistoricoLotes, type LoteHistorico } from '../../services/loteService';
 import { FiArchive, FiLoader } from 'react-icons/fi';
-
-const API_BASE_URL = '';
 
 const HistoricoLotes: React.FC = () => {
   const [lotes, setLotes] = useState<LoteHistorico[]>([]);
@@ -24,11 +21,8 @@ const HistoricoLotes: React.FC = () => {
     if (!dataString) return 'N/A';
     const data = new Date(dataString);
     return data.toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
     });
   };
 
@@ -71,18 +65,19 @@ const HistoricoLotes: React.FC = () => {
                   <td className="px-4 py-3">{formatarData(lote.start_time)}</td>
                   <td className="px-4 py-3">{formatarData(lote.end_time)}</td>
                   <td className="px-4 py-3">
-                    {lote.image_path ? (
-                      <a 
-                        href={`${API_BASE_URL}/uploads/${lote.image_path}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                      >
-                        <img 
-                          src={`${API_BASE_URL}/uploads/${lote.image_path}`} 
-                          alt={`Snapshot Lote ${lote.id}`} 
-                          className="w-24 h-auto rounded hover:opacity-80 transition-opacity"
-                        />
-                      </a>
+                    
+                    {lote.image_base64 ? (
+                      <img 
+                        src={`data:image/jpeg;base64,${lote.image_base64}`} 
+                        alt={`Snapshot Lote ${lote.id}`} 
+                        className="w-24 h-auto rounded hover:opacity-80 transition-opacity cursor-pointer"
+                        onClick={() => {
+                          const newTab = window.open();
+                          if (newTab) {
+                            newTab.document.body.innerHTML = `<body style="margin:0;display:flex;justify-content:center;align-items:center;background:#000;height:100vh;"><img src="data:image/jpeg;base64,${lote.image_base64}" style="max-width:100%;max-height:100vh;"></body>`;
+                          }
+                        }}
+                      />
                     ) : (
                       'N/A'
                     )}
