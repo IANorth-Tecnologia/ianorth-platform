@@ -1,33 +1,70 @@
+version: '3.8'
+
 services:
-  core_system:
+
+  painel_central:
+    build:
+      context: ./ianorth-web
+      dockerfile: Dockerfile
+    container_name: ianorth_painel
+    ports:
+      - "8026:80" 
+    restart: unless-stopped
+    networks:
+      - ianorth_network
+  # ========================================================
+  # MÁQUINA 1 (Linha A) - Sistema Independente
+  # ========================================================
+
+
+  backend_maquina_1:
     build:  
       context: ./ianorth-api
       dockerfile: Dockerfile.edge 
-    container_name: ianorth_backend 
+    container_name: maquina_01
     env_file:
       - ./ianorth-api/.env
     environment:
+      - MACHINE_ID=Maquina_1
       - OPENCV_FFMPEG_CAPTURE_OPTIONS=rtsp_transport;tcp
       - TZ=America/Sao_Paulo
+      - ARDUINO_IP=192.168.1.150    # IP do Arduino da maquina
     ports:
-      - "8036:8898"
+      - "8036:8898"                 
     volumes:
-      - ./ianorth-api/uploads:/app/uploads
       - ./ianorth-api/models:/app/models
-      - ./banco_local:/app/data
     restart: unless-stopped
     deploy:
       resources:
         reservations:
           devices: [{driver: nvidia, count: all, capabilities: [gpu]}]
+    networks:
+      - ianorth_network
 
-  frontend:
-    build:
-      context: ./ianorth-web
-      dockerfile: Dockerfile
-    container_name: ianorth-web
+  backend_maquina_2:
+    build:  
+      context: ./ianorth-api
+      dockerfile: Dockerfile.edge 
+    container_name: maquina_02
+    env_file:
+      - ./ianorth-api/.env
+    environment:
+      - MACHINE_ID=Maquina_2
+      - OPENCV_FFMPEG_CAPTURE_OPTIONS=rtsp_transport;tcp
+      - TZ=America/Sao_Paulo
+      - ARDUINO_IP=192.168.1.151    # IP do Arduino da maquina
     ports:
-     - "8026:80"
-    depends_on:
-     - core_system
+      - "8037:8898"                 
+    volumes:
+      - ./ianorth-api/models:/app/models
     restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, count: all, capabilities: [gpu]}]
+    networks:
+      - ianorth_network
+
+networks:
+  ianorth_network:
+    driver: bridge

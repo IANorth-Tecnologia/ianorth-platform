@@ -15,3 +15,7 @@ def get_lotes_historico(db: Session = Depends(get_db)):
     """
     lotes = lote_crud.get_completed_lotes(db=db)
     return lotes
+
+@router.get("/maquinas_ativas", response_model=list[str])
+def listar_maquinas_ativas(db: Session = Depends(get_db)):
+    return lote_crud.get_maquinas_ativas(db)

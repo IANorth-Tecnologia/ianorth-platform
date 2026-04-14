@@ -13,7 +13,7 @@ from app.core.database import SessionLocal
 from app.crud import lote_crud
 
 CONFIG_FILE = "edge_config.json"
-UPLOADS_DIR = "/app/uploads"
+MACHINE_ID = os.getenv("MACHINE_ID", "local")
 
 class RTSPCameraStream:
     def __init__(self, src):
@@ -58,7 +58,7 @@ class EdgeInferenceEngine:
         self.latest_frame = buffer.tobytes()
 
         self.latest_stats = {
-            "cameraId": "local", "loteId": None, "currentCount": 0,
+            "cameraId": MACHINE_ID, "loteId": None, "currentCount": 0,
             "targetCount": self.target_count, "progress": 0.0, "status": "Aguardando"
         }
         self.load_config()
@@ -102,21 +102,9 @@ class EdgeInferenceEngine:
         self.running = False
         if self.thread and self.thread.is_alive():
             self.thread.join(timeout=2.0)
-
-    def _cleanup_uploads(self, max_files=100):
-        try:
-            files = [os.path.join(UPLOADS_DIR, f) for f in os.listdir(UPLOADS_DIR) 
-                     if os.path.isfile(os.path.join(UPLOADS_DIR, f))]
-            if len(files) > max_files:
-                files.sort(key=os.path.getmtime)
-                to_delete = files[:len(files) - max_files]
-                for f in to_delete:
-                    os.remove(f)
-        except Exception:
-            pass       
+   
 
     def _run_inference_loop(self):
-        os.makedirs(UPLOADS_DIR, exist_ok=True)
 
         while self.running and (not self.camera_source or not self.model_path):
             print("--- [IA] Aguardando configuração via Frontend... ---")
@@ -177,7 +165,7 @@ class EdgeInferenceEngine:
 
             elif not cooldown_active and current_count >= self.target_count:
                 if not active_lote:
-                    active_lote = lote_crud.create_lote(db, camera_id="local")
+                    active_lote = lote_crud.create_lote(db, camera_id=MACHINE_ID)
                      
                 print(f"--- [IA] Meta atingida ({current_count}/{self.target_count}). Fechando Lote! ---")
                 ret_jpg, buffer_jpg = cv2.imencode('.jpg', im0)
@@ -190,7 +178,7 @@ class EdgeInferenceEngine:
                 )
 
                 self.latest_stats = {
-                    "cameraId": "local", "loteId": active_lote.id, "currentCount": current_count,
+                    "cameraId": MACHINE_ID, "loteId": active_lote.id, "currentCount": current_count,
                     "targetCount": self.target_count, "progress": 100.0, "status": "Concluído"
                 }
 
@@ -199,7 +187,7 @@ class EdgeInferenceEngine:
                 continue
 
             elif not active_lote and not cooldown_active and current_count > 0:
-                active_lote = lote_crud.create_lote(db, camera_id="local")
+                active_lote = lote_crud.create_lote(db, camera_id=MACHINE_ID)
 
             if active_lote:
                 status = "Em Andamento"
@@ -218,7 +206,7 @@ class EdgeInferenceEngine:
                 progress = 0.0 
 
             self.latest_stats = {
-                "cameraId": "local", "loteId": lote_id, "currentCount": current_count,
+                "cameraId": MACHINE_ID, "loteId": lote_id, "currentCount": current_count,
                 "targetCount": self.target_count, "progress": round(progress, 2), "status": status
             }
 

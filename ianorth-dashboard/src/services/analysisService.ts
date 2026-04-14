@@ -4,7 +4,6 @@ export interface AnalysisData {
   currentCount: number;
   targetCount: number;
   progress: number;
-  image_base64: string;
   status: 'Aguardando' | 'Em Andamento' | 'Concluído' | 'Cooldown';
 }
 
@@ -13,8 +12,8 @@ type MessageCallback = (data: AnalysisData) => void;
 const SERVER_IP = import.meta.env.VITE_SERVER_IP || '127.0.0.1';
   
 const MACHINE_PORTS: Record<string, number> = {
-  'Maquina_1': Number(import.meta.env.VITE_PORT_MAQUINA_01) || 8036,
-  'Maquina_2': Number(import.meta.env.VITE_PORT_MAQUINA_02) || 8037,
+  'Linha_A': Number(import.meta.env.VITE_PORT_LINHA_A) || 8036,
+  'Linha_B': Number(import.meta.env.VITE_PORT_LINHA_B) || 8037,
 };
 
 class AnalysisService {

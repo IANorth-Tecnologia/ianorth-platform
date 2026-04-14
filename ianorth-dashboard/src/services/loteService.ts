@@ -1,3 +1,8 @@
+
+
+
+const API_BASE_URL = '/api/v1';
+
 export interface MaquinaAtiva {
   id: string;
   name: string;
@@ -12,19 +17,9 @@ export interface LoteHistorico {
   image_base64: string | null;
 }
 
-const SERVER_IP = import.meta.env.VITE_SERVER_IP || '192.168.1.82';
-
-const MACHINE_PORTS: Record<string, number> = {
-  'Maquina_1': Number(import.meta.env.VITE_PORT_MAQUINA_01) || 8037,
-  'Maquina_2': Number(import.meta.env.VITE_PORT_MAQUINA_02) || 8039,
-};
-
-export const getHistoricoLotes = async (cameraId: string): Promise<LoteHistorico[]> => {
+export const getHistoricoLotes = async (): Promise<LoteHistorico[]> => {
   try {
-    const port = MACHINE_PORTS[cameraId];
-    if (!port) return [];
-
-    const response = await fetch(`http://${SERVER_IP}:${port}/api/v1/lotes/historico`);
+    const response = await fetch(`${API_BASE_URL}/lotes/historico`);
     if (!response.ok) {
       throw new Error(`A resposta da rede não foi 'ok': ${response.statusText}`);
     }
@@ -35,6 +30,7 @@ export const getHistoricoLotes = async (cameraId: string): Promise<LoteHistorico
     return [];
   }
 };
+
 
 export const getMaquinasAtivas = async (): Promise<MaquinaAtiva[]> => {
   try {
@@ -51,4 +47,5 @@ export const getMaquinasAtivas = async (): Promise<MaquinaAtiva[]> => {
     console.error("Erro ao buscar máquinas ativas:", error);
     return [];
   }
+  
 };

@@ -16,11 +16,10 @@ const HistoricoLotes: React.FC<HistoricoLotesProps> = ({ activeMachineId }) => {
     const fetchHistorico = async (showLoading = false) => {
       if (showLoading) setIsLoading(true);
       
-      // AQUI: Passamos a activeMachineId para a API saber a qual porta ligar!
-      const historicoCompleto = await getHistoricoLotes(activeMachineId);
+      const historicoCompleto = await getHistoricoLotes();
       
       if (isMounted) {
-        // Filtramos para ter a certeza absoluta
+        
         const lotesFiltrados = historicoCompleto.filter(
           (lote) => lote.camera_id === activeMachineId
         );
@@ -55,7 +54,7 @@ const HistoricoLotes: React.FC<HistoricoLotesProps> = ({ activeMachineId }) => {
 
   if (isLoading && activeMachineId) {
     return (
-      <div className="flex items-center justify-center p-4 text-gray-600 dark:text-gray-300">
+      <div className="flex items-center justify-center p-4">
         <FiLoader className="animate-spin mr-2" />
         Carregando histórico da {activeMachineId.replace('_', ' ')}...
       </div>

@@ -7,11 +7,9 @@ import {
 interface ConfigurationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  localMachineId: string;
-  localApiPort: number;
 }
 
-export const ConfigurationModal: React.FC<ConfigurationModalProps> = ({ isOpen, onClose, localMachineId, localApiPort }) => {
+export const ConfigurationModal: React.FC<ConfigurationModalProps> = ({ isOpen, onClose }) => {
   const [cameraType, setCameraType] = useState<'ip' | 'usb'>('ip');
   const [ip, setIp] = useState('10.6.58.207');
   const [user, setUser] = useState('admin');
@@ -26,11 +24,9 @@ export const ConfigurationModal: React.FC<ConfigurationModalProps> = ({ isOpen, 
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const SERVER_IP = import.meta.env.VITE_SERVER_IP || '192.168.1.82';
-  const API_BASE_URL = `http://${SERVER_IP}:${localApiPort}/api/v1`;
-
   if (!isOpen) return null;
 
+  // Função para lidar com o upload do arquivo .pt
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -45,7 +41,7 @@ export const ConfigurationModal: React.FC<ConfigurationModalProps> = ({ isOpen, 
     formData.append('file', file);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/upload-modelo`, {
+      const response = await fetch('/api/v1/upload-modelo', {
         method: 'POST',
         body: formData,
       });
@@ -54,6 +50,7 @@ export const ConfigurationModal: React.FC<ConfigurationModalProps> = ({ isOpen, 
 
       if (response.ok) {
         setUploadStatus('success');
+        // Preenche o campo texto automaticamente com o caminho do novo modelo!
         setModelPath(data.caminho); 
         setTimeout(() => setUploadStatus('idle'), 3000);
       } else {
@@ -74,7 +71,7 @@ export const ConfigurationModal: React.FC<ConfigurationModalProps> = ({ isOpen, 
       : usbIndex;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/configurar`, {
+      const response = await fetch('/api/v1/configurar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -104,10 +101,11 @@ export const ConfigurationModal: React.FC<ConfigurationModalProps> = ({ isOpen, 
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity p-4">
       <div className="bg-white dark:bg-background-secondary w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-background-tertiary max-h-[90vh] overflow-y-auto">
         
+        {/* Cabeçalho */}
         <div className="bg-gray-50 dark:bg-background-primary px-6 py-4 border-b border-gray-200 dark:border-background-tertiary flex justify-between items-center sticky top-0 z-10">
           <div className="flex items-center space-x-2">
             <FiMonitor className="text-accent-primary w-6 h-6" />
-            <h2 className="text-xl font-bold text-gray-900 dark:text-text-primary">Configurações ({localMachineId.replace('_', ' ')})</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-text-primary">Configurações do Sistema</h2>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-red-500 transition-colors">
             <FiX size={24} />
@@ -117,6 +115,7 @@ export const ConfigurationModal: React.FC<ConfigurationModalProps> = ({ isOpen, 
         <form onSubmit={handleSubmit} className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             
+            {/* a ESQUERDA CÂMERA */}
             <div className="space-y-4">
               <h3 className="font-semibold text-gray-800 dark:text-text-secondary flex items-center border-b border-gray-100 dark:border-background-tertiary pb-2">
                 <FiVideo className="mr-2" /> Fonte de Vídeo
@@ -152,11 +151,13 @@ export const ConfigurationModal: React.FC<ConfigurationModalProps> = ({ isOpen, 
               )}
             </div>
 
+            {/* a DIREITA IA E UPLOAD */}
             <div className="space-y-4">
               <h3 className="font-semibold text-gray-800 dark:text-text-secondary flex items-center border-b border-gray-100 dark:border-background-tertiary pb-2">
                 <FiCpu className="mr-2" /> Inteligência Artificial
               </h3>
 
+              {/* UPLOAD */}
               <div 
                 className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${uploadStatus === 'uploading' ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20' : uploadStatus === 'success' ? 'border-green-400 bg-green-50 dark:bg-green-900/20' : 'border-gray-300 dark:border-background-tertiary hover:border-accent-primary hover:bg-gray-50 dark:hover:bg-background-tertiary'}`}
                 onClick={() => fileInputRef.current?.click()}

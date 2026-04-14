@@ -48,3 +48,15 @@ def get_completed_lotes(db: Session, skip: int = 0, limit: int = 100) -> List[lo
     ).order_by(
         lote_model.Lote.end_time.desc()  
     ).offset(skip).limit(limit).all()
+
+def get_maquinas_ativas(db: Session):
+    """
+    Vai à tabela de lotes e devolve uma lista com os nomes únicos de todas as 
+    máquinas que já guardaram algum dado no sistema.
+    """
+    try:
+        maquinas = db.query(lote_model.Lote.camera_id).distinct().all()
+        return [m[0] for m in maquinas if m[0] is not None]
+    except Exception as e:
+        print(f"Erro ao buscar máquinas ativas: {e}")
+        return []
