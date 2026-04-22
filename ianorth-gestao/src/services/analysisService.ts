@@ -4,6 +4,7 @@ export interface AnalysisData {
   currentCount: number;
   targetCount: number;
   progress: number;
+  image_base64: string;
   status: 'Aguardando' | 'Em Andamento' | 'Concluído' | 'Cooldown';
 }
 
@@ -12,8 +13,8 @@ type MessageCallback = (data: AnalysisData) => void;
 const SERVER_IP = import.meta.env.VITE_SERVER_IP || '127.0.0.1';
   
 const MACHINE_PORTS: Record<string, number> = {
-  'Linha_A': Number(import.meta.env.VITE_PORT_LINHA_A) || 8036,
-  'Linha_B': Number(import.meta.env.VITE_PORT_LINHA_B) || 8037,
+  'Maquina_1': Number(import.meta.env.VITE_PORT_MAQUINA_01) || 8036,
+  'Maquina_2': Number(import.meta.env.VITE_PORT_MAQUINA_02) || 8037,
 };
 
 class AnalysisService {
@@ -27,7 +28,7 @@ class AnalysisService {
     const port = MACHINE_PORTS[cameraId];
     if (!port) return;
 
-    // AQUI ESTAVA O ERRO! A rota direta do FastAPI geralmente é /ws/nome_da_maquina
+   
     const wsUrl = `ws://${SERVER_IP}:${port}/ws/${cameraId}`;
     
     console.log(`[WS] Tentando conectar à máquina: ${wsUrl}`);

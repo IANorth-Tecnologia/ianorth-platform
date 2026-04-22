@@ -1,13 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 
 from app.core.config import settings
 from app.core.database import engine
 from app.models import lote_model
-from app.api.v1 import websocket_gateway, lotes_router, video_router, config_router, arduino_router
+from app.api.v1 import websocket_gateway, lotes_router, video_router, config_router, arduino_router, gestao_router 
 from app.core.inference_service import inference_engine
 
 def create_db_and_tables():
@@ -62,6 +61,7 @@ app.include_router(websocket_gateway.router, tags=["Tempo Real"])
 app.include_router(video_router.router, prefix=settings.API_V1_STR, tags=["Vídeo"])
 
 app.include_router(arduino_router.router, prefix=settings.API_V1_STR + "/arduino", tags=["Integração Arduino"])
+app.include_router(gestao_router.router, prefix=settings.API_V1_STR + "/gestao", tags=["BI e Gestão"])
 
 @app.get("/")
 def read_root():

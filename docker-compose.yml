@@ -65,6 +65,17 @@ services:
     networks:
       - ianorth_network
 
+  painel_gestao:
+    build:
+      context: ./ianorth-gestao
+      dockerfile: Dockerfile
+    container_name: ianorth_Dashboard
+    ports:
+      - "8027:80"  
+    restart: unless-stopped
+    networks:
+      - ianorth_network
+
 networks:
   ianorth_network:
     driver: bridge

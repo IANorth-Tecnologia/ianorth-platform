@@ -28,7 +28,7 @@ class AnalysisService {
     const port = MACHINE_PORTS[cameraId];
     if (!port) return;
 
-    // AQUI ESTAVA O ERRO! A rota direta do FastAPI geralmente é /ws/nome_da_maquina
+   
     const wsUrl = `ws://${SERVER_IP}:${port}/ws/${cameraId}`;
     
     console.log(`[WS] Tentando conectar à máquina: ${wsUrl}`);
