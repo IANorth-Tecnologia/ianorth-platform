@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Cell 
 } from 'recharts';
-import { FiActivity, FiBox, FiCamera, FiCheckCircle, FiGrid, FiTrendingUp, FiLoader } from 'react-icons/fi';
+import { FiActivity, FiBox, FiCamera, FiGrid, FiTrendingUp } from 'react-icons/fi';
 
 const SERVER_IP = import.meta.env.VITE_SERVER_IP || '192.168.1.82';
-const API_PORT = 8036; 
+const API_PORT = Number(import.meta.env.VITE_PORT_MAQUINA_01) || 8036; 
 
 const AVAILABLE_MACHINES = [
-  { id: 'Maquina_1', port: 8036, name: 'Trefila 01' },
-  { id: 'Maquina_2', port: 8037, name: 'Trefila 02' },
+  { id: 'Maquina_1', port: Number(import.meta.env.VITE_PORT_MAQUINA_01) || 8036, name: 'Trefila 01' },
+  { id: 'Maquina_2', port: Number(import.meta.env.VITE_PORT_MAQUINA_02) || 8037, name: 'Trefila 02' },
 ];
 
 const KPICard = ({ titulo, valor, icone, cor }: any) => (
@@ -28,7 +28,6 @@ export const DashboardPage: React.FC = () => {
   const [abaAtiva, setAbaAtiva] = useState<'bi' | 'monitoramento'>('bi');
   const [maquinaFoco, setMaquinaFoco] = useState(AVAILABLE_MACHINES[0]);
   const [dadosBI, setDadosBI] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchGestaoData = async () => {
@@ -40,8 +39,6 @@ export const DashboardPage: React.FC = () => {
         }
       } catch (error) {
         console.error("Erro ao buscar dados do BI:", error);
-      } finally {
-        setIsLoading(false);
       }
     };
     fetchGestaoData();
@@ -59,25 +56,24 @@ export const DashboardPage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-2xl font-black tracking-tight">IANorth <span className="font-light text-blue-500">Corporate</span></h1>
-            <p className="text-sm text-gray-500 font-medium">Controle de Fardos e Produção</p>
+            <p className="text-sm text-gray-500 font-medium">Controle de Produção de Fardos</p>
           </div>
         </div>
 
         <div className="flex bg-gray-100 dark:bg-gray-900 p-1.5 rounded-xl border border-gray-200 dark:border-gray-700">
-          <button onClick={() => setAbaAtiva('bi')} className={`flex items-center px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${abaAtiva === 'bi' ? 'bg-white dark:bg-gray-800 shadow text-blue-600 dark:text-blue-400' : 'text-gray-500'}`}>
+          <button onClick={() => setAbaAtiva('bi')} className={`flex items-center px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${abaAtiva === 'bi' ? 'bg-white dark:bg-gray-800 shadow text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}>
             <FiTrendingUp className="mr-2" /> Visão Global (Fardos)
           </button>
-          <button onClick={() => setAbaAtiva('monitoramento')} className={`flex items-center px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${abaAtiva === 'monitoramento' ? 'bg-white dark:bg-gray-800 shadow text-blue-600 dark:text-blue-400' : 'text-gray-500'}`}>
+          <button onClick={() => setAbaAtiva('monitoramento')} className={`flex items-center px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${abaAtiva === 'monitoramento' ? 'bg-white dark:bg-gray-800 shadow text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}>
             <FiCamera className="mr-2" /> Monitoramento
           </button>
         </div>
       </header>
 
-      {abaAtiva === 'bi' && !isLoading && dadosBI && (
+      {abaAtiva === 'bi' && dadosBI && (
         <div className="space-y-8 animate-fadeIn">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <KPICard titulo="Fardos Produzidos (Hoje)" valor={dadosBI.kpis.fardos_hoje} cor="text-blue-600 bg-blue-100" icone={<FiBox className="w-8 h-8" />} />
-            <KPICard titulo="Peças Totais Processadas" valor={dadosBI.kpis.pecas_hoje.toLocaleString()} cor="text-green-600 bg-green-100" icone={<FiCheckCircle className="w-8 h-8" />} />
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <KPICard titulo="Fardos Concluídos (Hoje)" valor={dadosBI.kpis.fardos_hoje} cor="text-blue-600 bg-blue-100" icone={<FiBox className="w-8 h-8" />} />
             <KPICard titulo="Trefilas em Operação" valor={dadosBI.kpis.maquinas_ativas} cor="text-purple-600 bg-purple-100" icone={<FiGrid className="w-8 h-8" />} />
           </div>
 
@@ -89,10 +85,10 @@ export const DashboardPage: React.FC = () => {
                   <LineChart data={dadosBI.producao_hora}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                     <XAxis dataKey="hora" stroke="#6B7280" fontSize={12} />
-                    <YAxis stroke="#6B7280" fontSize={12} />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="Maquina_1" name="Fardos Trefila 01" stroke="#4F46E5" strokeWidth={4} />
-                    <Line type="monotone" dataKey="Maquina_2" name="Fardos Trefila 02" stroke="#10B981" strokeWidth={4} />
+                    <YAxis stroke="#6B7280" fontSize={12} allowDecimals={false} />
+                    <Tooltip contentStyle={{ borderRadius: '12px' }} />
+                    <Line type="monotone" dataKey="Maquina_1" name="Fardos Trefila 01" stroke="#4F46E5" strokeWidth={4} connectNulls />
+                    <Line type="monotone" dataKey="Maquina_2" name="Fardos Trefila 02" stroke="#10B981" strokeWidth={4} connectNulls />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -104,7 +100,8 @@ export const DashboardPage: React.FC = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={dadosBI.totais_por_maquina}>
                     <XAxis dataKey="nome" stroke="#6B7280" fontSize={12} />
-                    <Tooltip cursor={{ fill: 'transparent' }} />
+                    <YAxis stroke="#6B7280" fontSize={12} allowDecimals={false} />
+                    <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '12px' }} />
                     <Bar dataKey="total" name="Fardos" radius={[8, 8, 0, 0]}>
                       {dadosBI.totais_por_maquina.map((entry: any, index: number) => (
                         <Cell key={`cell-${index}`} fill={entry.cor} />

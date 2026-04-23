@@ -14,18 +14,16 @@ def get_db():
 
 @router.get("/dashboard")
 def get_dashboard_data(db: Session = Depends(get_db)):
-    # 1. KPIs GLOBAIS (Fardos e Peças totais de HOJE)
+    # 1. KPIs GLOBAIS (Apenas Fardos/Lotes de HOJE)
     query_kpis = text("""
         SELECT 
             COUNT(id) as total_fardos,
-            ISNULL(SUM(final_count), 0) as total_pecas,
             COUNT(DISTINCT camera_id) as maquinas_ativas
         FROM lotes 
         WHERE CAST(start_time AS DATE) = CAST(GETDATE() AS DATE)
     """)
     res_kpis = db.execute(query_kpis).fetchone()
     
-    # 2. FARDOS POR MÁQUINA (Gráfico de Barras - Agora com COUNT)
     query_totais = text("""
         SELECT 
             camera_id, 
@@ -46,7 +44,6 @@ def get_dashboard_data(db: Session = Depends(get_db)):
             "cor": cores[idx % len(cores)]
         })
 
-    # 3. FARDOS POR HORA (Gráfico de Linha - Agora com COUNT)
     query_hora = text("""
         SELECT 
             DATEPART(HOUR, start_time) as hora,
@@ -70,7 +67,6 @@ def get_dashboard_data(db: Session = Depends(get_db)):
     return {
         "kpis": {
             "fardos_hoje": res_kpis.total_fardos,
-            "pecas_hoje": res_kpis.total_pecas,
             "maquinas_ativas": res_kpis.maquinas_ativas
         },
         "totais_por_maquina": totais_formatados,
